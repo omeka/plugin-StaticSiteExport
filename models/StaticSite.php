@@ -13,20 +13,17 @@ class StaticSite extends Omeka_Record_AbstractRecord
         $this->_mixins[] = new Mixin_Timestamp($this);
     }
 
-    protected function _validate()
-    {
-    }
-
     protected function beforeSave($args)
     {
         if ($args['insert']) {
-            $this->setStatus('dispatching');
+            $this->setStatus(Process::STATUS_STARTING);
         }
     }
 
     protected function afterSave($args)
     {
         if ($args['insert']) {
+            // Set a unique name for the static site using the record ID.
             $this->setName(sprintf(
                 '%s-%s',
                 str_replace(' ', '-', strtolower(get_option('site_title'))),
@@ -67,6 +64,11 @@ class StaticSite extends Omeka_Record_AbstractRecord
     }
 
     public function getStatus()
+    {
+        return $this->status;
+    }
+
+    public function getDisplayStatus()
     {
         return $this->status;
     }

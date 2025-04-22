@@ -12,38 +12,39 @@ class StaticSiteExport_IndexController extends Omeka_Controller_AbstractActionCo
 
     public function exportAction()
     {
-        $staticSite = new StaticSite;
         $form = new StaticSiteExport_Form_StaticSite;
+        $csrf = new Omeka_Form_SessionCsrf;
+        $this->view->form = $form;
+        $this->view->csrf = $csrf;
 
         if ($this->getRequest()->isPost()) {
-            if ($form->isValid($_POST)) {
-                try {
-                    // Save the static site record.
-                    $staticSite = new StaticSite;
-                    $data = $staticSite->setData([
-                        'base_url' => $form->getValue('base_url'),
-                    ]);
-                    $staticSite->save();
-
-                    // Dispatch the static site export job.
-                    $dispatcher = Zend_Registry::get('job_dispatcher');
-                    $dispatcher->sendLongRunning(
-                        'Job_StaticSiteExport',
-                        ['static_site_id' => $staticSite->getId()]
-                    );
-
-                    $this->_helper->flashMessenger(__('Exporting the static site "%s".', $staticSite->name), 'success');
-                    $this->_helper->redirector('browse');
-                } catch (Omeka_Validate_Exception $e) {
-                    $staticSite->delete();
-                    $this->_helper->flashMessenger($e);
-                }
-            } else {
+            if (!$csrf->isValid($_POST)) {
                 $this->_helper->flashMessenger(__('There were errors found in your form. Please edit and resubmit.'), 'error');
+                return;
+            }
+            $staticSite = new StaticSite;
+            $staticSite->setData([
+                'base_url' => $_POST['base_url'],
+            ]);
+            if ($staticSite->save(false)) {
+
+                // Dispatch the static site export job.
+                $dispatcher = Zend_Registry::get('job_dispatcher');
+                $dispatcher->sendLongRunning(
+                    'Job_StaticSiteExport',
+                    ['static_site_id' => $staticSite->getId()]
+                );
+
+                $this->_helper->flashMessenger(__('Exporting the static site "%s".', $staticSite->name), 'success');
+                $this->_helper->redirector('browse');
+            } else {
+                $staticSite->delete();
+                $this->_helper->flashMessenger($e);
             }
         }
 
-        $this->view->form = $form;
+
+
     }
 
     protected function _getBrowseDefaultSort()

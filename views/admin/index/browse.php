@@ -24,12 +24,10 @@ echo flash();
             <?php foreach (loop('StaticSite') as $staticSite): ?>
             <?php $owner = $staticSite->getOwner(); ?>
             <tr>
-                <td>
-                    <span class="title"><?php echo html_escape($staticSite->getName()); ?></a></span>
-                </td>
+                <td><span class="title"><?php echo html_escape($staticSite->getName()); ?></a></span></td>
                 <td><?php echo $staticSite->getStatus(); ?></td>
                 <td><?php echo $owner ? sprintf('%s (%s)', $owner->name, $owner->username) : ''; ?></td>
-                <td><?php echo format_date(metadata('static_site', 'added')); ?></td>
+                <td><?php echo format_date(metadata('static_site', 'added'), Zend_Date::DATETIME_MEDIUM); ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>

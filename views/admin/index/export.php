@@ -17,6 +17,7 @@ echo flash();
             <input type="submit" name="submit" class="submit big green button" id="export_static_site" value="<?php echo __('Export Static Site'); ?>" />
         </div>
     </section>
+    <?php echo $csrf; ?>
 </form>
 
 <?php echo foot(); ?>

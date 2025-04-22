@@ -45,6 +45,7 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
 
     public function hookInitialize()
     {
+        add_translation_source(dirname(__FILE__) . '/languages');
     }
 
     public function hookDefineAcl($args)
