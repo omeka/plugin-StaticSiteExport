@@ -58,6 +58,12 @@ class StaticSite extends Omeka_Record_AbstractRecord
         return json_decode($this->data, true);
     }
 
+    public function getDataValue($key, $default = null)
+    {
+        $data = $this->getData();
+        return isset($data[$key]) ? $data[$key] : $default;
+    }
+
     public function setStatus($status)
     {
         $this->status = $status;

@@ -10,13 +10,21 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
      */
     public function perform()
     {
-        $this->setStatus(Process::STATUS_IN_PROGRESS);
+        try {
+            $this->setStatus(Process::STATUS_IN_PROGRESS);
 
-        $this->createSiteDirectory();
+            $this->createSiteDirectory();
+            // $this->createItemsSection();
+            // $this->createCollectionsSection();
+            $this->createSiteArchive();
+            $this->deleteSiteDirectory();
 
-        // @todo
+            $this->setStatus(Process::STATUS_COMPLETED);
 
-        $this->setStatus(Process::STATUS_COMPLETED);
+        } catch (Exception $e) {
+            $this->setStatus(Process::STATUS_ERROR);
+            _log($e->getMessage(), Zend_Log::ERR);
+        }
     }
 
     /**
@@ -24,8 +32,6 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
      */
     public function createSiteDirectory()
     {
-        $pluginPath = sprintf('%s/StaticSiteExport', PLUGIN_DIR);
-
         $this->makeDirectory('archetypes');
         $this->makeDirectory('assets');
         $this->makeDirectory('assets/thumbnails');
@@ -42,6 +48,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $this->makeDirectory('themes');
 
         // Unzip the Omeka theme into the Hugo themes directory.
+        $pluginPath = sprintf('%s/StaticSiteExport', PLUGIN_DIR);
         $command = sprintf(
             'unzip %s -d %s',
             sprintf('%s/data/gohugo-theme-omeka-classic.zip', $pluginPath),
@@ -49,7 +56,29 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         );
         $this->execute($command);
 
-        // @todo
+        // @todo: Copy shortcodes provided by plugins?
+        // @todo: Copy vendor packages provided by plugins?
+        // @todo: Build the Hugo menu from Omeka site navigation.
+        // @todo: Get the homepage.
+
+        // Make the hugo.json configuration file.
+        $siteConfig = new ArrayObject([
+            'baseURL' => $this->getStaticSite()->getDataValue('base_url'),
+            'theme' => 'gohugo-theme-omeka-classic',
+            'title' => get_option('site_title'),
+            // 'menus' => [
+            //     'main' => $menu->getArrayCopy(),
+            // ],
+            // 'params' => [
+            //     'homepage' => $homepage,
+            //     'theme' => $this->getStaticSite()->dataValue('theme'),
+            // ],
+            'pagination' => [
+                'pagerSize' => 25,
+            ],
+        ]);
+
+        $this->makeFile('hugo.json', json_encode($siteConfig->getArrayCopy(), JSON_PRETTY_PRINT));
     }
 
     /**
@@ -71,6 +100,9 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         );
     }
 
+    /**
+     * Execute a command.
+     */
     public function execute($command): void
     {
         $output = shell_exec($command);
@@ -78,6 +110,32 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             // Stop the job.
             throw new Exception(sprintf('Invalid command: %s', $command));
         }
+    }
+
+    /**
+     * Create the static site archive (ZIP).
+     */
+    public function createSiteArchive(): void
+    {
+        $command = sprintf(
+            'cd %s && zip --recurse-paths %s %s',
+            $this->getSitesDirectoryPath(),
+            sprintf('%s.zip', $this->getStaticSite()->getName()),
+            $this->getStaticSite()->getName()
+        );
+        $this->execute($command);
+    }
+
+    /**
+     * Delete the static site directory.
+     */
+    public function deleteSiteDirectory(): void
+    {
+        $command = sprintf(
+            'rm -r %s',
+            escapeshellarg($this->getSiteDirectoryPath())
+        );
+        $this->execute($command);
     }
 
     /**
