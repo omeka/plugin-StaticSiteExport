@@ -4,6 +4,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     protected $_staticSite;
     protected $_sitesDirectoryPath;
     protected $_siteDirectoryPath;
+    protected $_itemIds;
 
     /**
      * Export the static site.
@@ -14,7 +15,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             $this->setStatus(Process::STATUS_IN_PROGRESS);
 
             $this->createSiteDirectory();
-            // $this->createItemsSection();
+            $this->createItemsSection();
             // $this->createCollectionsSection();
             $this->createSiteArchive();
             $this->deleteSiteDirectory();
@@ -25,6 +26,53 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             $this->setStatus(Process::STATUS_ERROR);
             _log($e->getMessage(), Zend_Log::ERR);
         }
+    }
+
+    /**
+     * Create the items section.
+     */
+    public function createItemsSection()
+    {
+        $frontMatter = [
+            'title' => __('Items'),
+            'params' => [],
+        ];
+        $this->makeFile('content/items/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
+
+        $page = 1;
+        do {
+            $items = get_db()->getTable('Item')->findBy([], 100, $page++);
+            foreach ($items as $item) {
+
+                $this->makeDirectory(sprintf('content/items/%s', $item->id));
+
+                $frontMatterPage = [
+                    'date' => (new DateTime(metadata($item, 'added')))->format('c'),
+                    'title' => metadata($item, 'display_title'),
+                    'draft' => $item->public ? false : true,
+                    'params' => [],
+                ];
+
+                // Build the markdown.
+                $markdown = '';
+                /*
+                 * @todo: Add the following to the markdown:
+                 *  - gallery of files (if configured)
+                 *  - element texts
+                 *  - links to files
+                 *  - link to collection
+                 *  - tags (hook into Hugo tags)
+                 *  - citation
+                 *  - content added by other plugins
+                 */
+
+                // Make the markdown file.
+                $this->makeFile(
+                    sprintf('content/items/%s/index.md', $item->id),
+                    sprintf("%s\n%s", json_encode($frontMatterPage, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT), $markdown)
+                );
+            }
+        } while ($items);
     }
 
     /**
