@@ -118,13 +118,6 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     {
         $blocks = new ArrayObject;
 
-        // Add item tags to page front matter.
-        $tags = [];
-        foreach ($item->Tags as $tag) {
-            $tags[] = $tag['name'];
-        }
-        $frontMatterPage['tags'] = $tags;
-
         /*
          * @todo: Add the following to the markdown:
          *  - Gallery of files (if configured)
@@ -148,6 +141,27 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         //     'frontMatter' => $frontMatterBlock,
         //     'markdown' => $blockMarkdown,
         // ];
+
+        if (metadata($item, 'has tags')) {
+            // Add item tags to page front matter.
+            $tags = [];
+            foreach ($item->Tags as $tag) {
+                $tags[] = $tag['name'];
+            }
+            $frontMatterPage['tags'] = $tags;
+            $frontMatterBlock = new ArrayObject([
+                'params' => [
+                    'id' => 'item-tags',
+                    'classes' => ['element'],
+                    'blockHeading' => __('Tags'),
+                ],
+            ]);
+            $blocks[] = [
+                'name' => 'tags',
+                'frontMatter' => $frontMatterBlock,
+                'markdown' => sprintf('{{< omeka-tags page="items/%s" >}}', $item->id),
+            ];
+        }
 
         return $blocks;
     }
