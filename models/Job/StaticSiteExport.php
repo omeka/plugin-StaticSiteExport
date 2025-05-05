@@ -14,6 +14,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         try {
             $this->setStatus(Process::STATUS_IN_PROGRESS);
             $this->createSiteDirectory();
+            $this->createFilesSection();
             $this->createItemsSection();
             // $this->createCollectionsSection();
             $this->createSiteArchive();
@@ -34,6 +35,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $this->makeDirectory('assets');
         $this->makeDirectory('assets/thumbnails');
         $this->makeDirectory('content');
+        $this->makeDirectory('content/files');
         $this->makeDirectory('content/items');
         $this->makeDirectory('content/collections');
         $this->makeDirectory('data');
@@ -75,6 +77,71 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     }
 
     /**
+     * Create the files section.
+     */
+    public function createFilesSection()
+    {
+        $frontMatter = [
+            'title' => __('Files'),
+            'params' => [],
+        ];
+        $this->makeFile('content/files/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
+
+        $page = 1;
+        do {
+            $files = get_db()->getTable('File')->findBy([], 100, $page++);
+            foreach ($files as $file) {
+                $this->createFileBundle($file);
+            }
+        } while ($files);
+    }
+
+    /**
+     * Create a file bundle.
+     */
+    public function createFileBundle($file)
+    {
+        $item = $file->getItem();
+
+        $this->makeDirectory(sprintf('content/files/%s', $file->id));
+        $this->makeDirectory(sprintf('content/files/%s/blocks', $file->id));
+
+        $frontMatterPage = new ArrayObject([
+            'date' => (new DateTime(metadata($file, 'added')))->format('c'),
+            'title' => $file->original_filename,
+            'draft' => $item->public ? false : true,
+            'params' => [
+                'fileID' => $file->id,
+            ],
+        ]);
+        $blocks = new ArrayObject;
+
+        $this->makeBundleFiles(sprintf('files/%s', $file->id), $file, $frontMatterPage, $blocks);
+
+        // Copy original and thumbnail files, if any. Use copy() if the installation
+        // uses the Filesystem storage adapter, otherwise use HTTP client data streaming.
+        $storage = Zend_Registry::get('storage');
+        $toPath = sprintf('%s/content/files/%s/file.%s', $this->getSiteDirectoryPath(),$file->id, $file->getExtension());
+        if ($storage->getAdapter() instanceof Omeka_Storage_Adapter_Filesystem) {
+            $fromPath = sprintf('%s/files/%s', BASE_DIR, $file->getStoragePath('original'));
+            copy($fromPath, $toPath);
+        } else {
+            // @todo: Copy using HTTP client data streaming.
+        }
+        if ($file->has_derivative_image) {
+            foreach (['fullsize', 'thumbnail', 'square_thumbnail'] as $type) {
+                $toPath = sprintf('%s/content/files/%s/%s.jpg', $this->getSiteDirectoryPath(), $file->id, $type);
+                if ($storage->getAdapter() instanceof Omeka_Storage_Adapter_Filesystem) {
+                    $fromPath = sprintf('%s/files/%s', BASE_DIR, $file->getStoragePath($type));
+                    copy($fromPath, $toPath);
+                } else {
+                    // @todo: Copy using HTTP client data streaming.
+                }
+            }
+        }
+    }
+
+    /**
      * Create the items section.
      */
     public function createItemsSection()
@@ -89,81 +156,33 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         do {
             $items = get_db()->getTable('Item')->findBy([], 100, $page++);
             foreach ($items as $item) {
-
-                $this->makeDirectory(sprintf('content/items/%s', $item->id));
-                $this->makeDirectory(sprintf('content/items/%s/blocks', $item->id));
-
-
-                $frontMatterPage = new ArrayObject([
-                    'date' => (new DateTime(metadata($item, 'added')))->format('c'),
-                    'title' => metadata($item, 'display_title'),
-                    'draft' => $item->public ? false : true,
-                    'params' => [
-                        'itemID' => $item->id,
-                        'description' => metadata($item, array('Dublin Core', 'Description'), array('snippet' => 250)),
-                    ],
-                ]);
-
-                $blocks = $this->getItemPageBlocks($item, $frontMatterPage);
-                // @todo: Trigger an event
-                $this->makeBundleFiles(sprintf('items/%s', $item->id), $item, $frontMatterPage, $blocks);
+                $this->createItemBundle($item);
             }
         } while ($items);
     }
 
     /**
-     * Get blocks for the passed item.
+     * Create a file bundle.
      */
-    public function getItemPageBlocks($item, $frontMatterPage)
+    public function createItemBundle($item)
     {
+        $this->makeDirectory(sprintf('content/items/%s', $item->id));
+        $this->makeDirectory(sprintf('content/items/%s/blocks', $item->id));
+
+        $frontMatterPage = new ArrayObject([
+            'date' => (new DateTime(metadata($item, 'added')))->format('c'),
+            'title' => metadata($item, 'display_title'),
+            'draft' => $item->public ? false : true,
+            'params' => [
+                'itemID' => $item->id,
+                'description' => metadata($item, array('Dublin Core', 'Description'), array('snippet' => 250)),
+            ],
+        ]);
         $blocks = new ArrayObject;
 
-        /*
-         * @todo: Add the following to the markdown:
-         *  - Gallery of files (if configured)
-         *  - Element texts
-         *  - Links to files
-         *  - Link to collection
-         *  - Tags (hook into Hugo tags)
-         *  - Citation : REQUIRES RE-IMPLEMENTATION OF Item::getCitation()
-         *  - Content added by other plugins
-         */
+        $this->addTagsBlock($item, $frontMatterPage, $blocks);
 
-        // $frontMatterBlock = new ArrayObject([
-        //     'params' => [
-        //         'id' => '',
-        //         'classes' => [''],
-        //     ],
-        // ]);
-        // $blockMarkdown = '';
-        // $blocks[] = [
-        //     'name' => '',
-        //     'frontMatter' => $frontMatterBlock,
-        //     'markdown' => $blockMarkdown,
-        // ];
-
-        if (metadata($item, 'has tags')) {
-            // Add item tags to page front matter.
-            $tags = [];
-            foreach ($item->Tags as $tag) {
-                $tags[] = $tag['name'];
-            }
-            $frontMatterPage['tags'] = $tags;
-            $frontMatterBlock = new ArrayObject([
-                'params' => [
-                    'id' => 'item-tags',
-                    'classes' => ['element'],
-                    'blockHeading' => __('Tags'),
-                ],
-            ]);
-            $blocks[] = [
-                'name' => 'tags',
-                'frontMatter' => $frontMatterBlock,
-                'markdown' => sprintf('{{< omeka-tags page="items/%s" >}}', $item->id),
-            ];
-        }
-
-        return $blocks;
+        $this->makeBundleFiles(sprintf('items/%s', $item->id), $item, $frontMatterPage, $blocks);
     }
 
     /**
@@ -188,7 +207,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         }
         // Make the markdown file.
         $this->makeFile(
-            sprintf('content/items/%s/index.md', $resource->id),
+            sprintf('content/%s/index.md', $resourceContentPath),
             json_encode($frontMatterPage, JSON_PRETTY_PRINT)
         );
     }
@@ -299,5 +318,32 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             );
         }
         return $this->_siteDirectoryPath;
+    }
+
+    public function addTagsBlock($item, $frontMatterPage, $blocks)
+    {
+        if (!metadata($item, 'has tags')) {
+            return;
+        }
+
+        // Add item tags to page front matter.
+        $tags = [];
+        foreach ($item->Tags as $tag) {
+            $tags[] = $tag['name'];
+        }
+        $frontMatterPage['tags'] = $tags;
+
+        $frontMatterBlock = new ArrayObject([
+            'params' => [
+                'id' => 'item-tags',
+                'classes' => ['element'],
+                'blockHeading' => __('Tags'),
+            ],
+        ]);
+        $blocks[] = [
+            'name' => 'tags',
+            'frontMatter' => $frontMatterBlock,
+            'markdown' => sprintf('{{< omeka-tags page="items/%s" >}}', $item->id),
+        ];
     }
 }
