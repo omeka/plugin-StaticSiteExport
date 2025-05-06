@@ -121,21 +121,29 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         // Copy original and thumbnail files, if any. Use copy() if the installation
         // uses the Filesystem storage adapter, otherwise use HTTP client data streaming.
         $storage = Zend_Registry::get('storage');
-        $toPath = sprintf('%s/content/files/%s/file.%s', $this->getSiteDirectoryPath(),$file->id, $file->getExtension());
+        $filePath = sprintf('content/files/%s/file.%s', $file->id, $file->getExtension());
+        $toPath = sprintf('%s/%s', $this->getSiteDirectoryPath(), $filePath);
         if ($storage->getAdapter() instanceof Omeka_Storage_Adapter_Filesystem) {
             $fromPath = sprintf('%s/files/%s', BASE_DIR, $file->getStoragePath('original'));
             copy($fromPath, $toPath);
         } else {
-            // @todo: Copy using HTTP client data streaming.
+            $fromPath = $file->getWebPath('original');
+            $this->makeFile($filePath);
+            $client = new Omeka_Http_Client;
+            $client->setUri($fromPath)->setStream($toPath)->send();
         }
         if ($file->has_derivative_image) {
             foreach (['fullsize', 'thumbnail', 'square_thumbnail'] as $type) {
-                $toPath = sprintf('%s/content/files/%s/%s.jpg', $this->getSiteDirectoryPath(), $file->id, $type);
+                $filePath = sprintf('content/files/%s/%s.jpg', $file->id, $type);
+                $toPath = sprintf('%s/%s', $this->getSiteDirectoryPath(), $filePath);
                 if ($storage->getAdapter() instanceof Omeka_Storage_Adapter_Filesystem) {
                     $fromPath = sprintf('%s/files/%s', BASE_DIR, $file->getStoragePath($type));
                     copy($fromPath, $toPath);
                 } else {
-                    // @todo: Copy using HTTP client data streaming.
+                    $fromPath = $file->getWebPath($type);
+                    $this->makeFile($filePath);
+                    $client = new Omeka_Http_Client;
+                    $client->setUri($fromPath)->setStream($toPath)->send();
                 }
             }
         }

@@ -42,9 +42,6 @@ class StaticSiteExport_IndexController extends Omeka_Controller_AbstractActionCo
                 $this->_helper->flashMessenger($e);
             }
         }
-
-
-
     }
 
     protected function _getBrowseDefaultSort()
