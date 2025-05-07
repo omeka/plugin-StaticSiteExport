@@ -342,7 +342,6 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $frontMatterBlock = new ArrayObject([
             'params' => [
                 'id' => 'itemfiles',
-                'classes' => ['element'],
                 'blockHeading' => __('Files'),
             ],
         ]);
@@ -369,7 +368,6 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $frontMatterBlock = new ArrayObject([
             'params' => [
                 'id' => 'item-tags',
-                'classes' => ['element'],
                 'blockHeading' => __('Tags'),
             ],
         ]);
