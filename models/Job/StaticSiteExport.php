@@ -195,10 +195,16 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         }
         $blocks = new ArrayObject;
 
+        $this->addBlockElementTexts($item, $frontMatterPage, $blocks);
         $this->addBlockFilesGallery($item, $frontMatterPage, $blocks);
         $this->addBlockTags($item, $frontMatterPage, $blocks);
 
         $this->makeBundleFiles(sprintf('items/%s', $item->id), $item, $frontMatterPage, $blocks);
+
+        $this->makeFile(
+            sprintf('content/items/%s/element_texts.json', $item->id),
+            json_encode(all_element_texts($item, ['return_type' => 'array']))
+        );
     }
 
     /**
@@ -340,6 +346,23 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             );
         }
         return $this->_siteDirectoryPath;
+    }
+
+    /**
+     * Add the element texts block.
+     *
+     * @param Item $item
+     * @param ArrayObject $frontMatterPage
+     * @param ArrayObject $blocks
+     */
+    public function addBlockElementTexts($item, $frontMatterPage, $blocks)
+    {
+        $frontMatterBlock = new ArrayObject([]);
+        $blocks[] = [
+            'name' => 'elementTexts',
+            'frontMatter' => $frontMatterBlock,
+            'markdown' => sprintf('{{< omeka-element-texts itemPage="items/%s" >}}', $item->id),
+        ];
     }
 
     /**
