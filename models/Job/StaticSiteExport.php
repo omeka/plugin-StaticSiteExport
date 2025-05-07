@@ -112,6 +112,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             'draft' => $item->public ? false : true,
             'params' => [
                 'fileID' => $file->id,
+                'thumbnailSpec' => $this->getThumbnailSpec($file, 'square_thumbnail'),
             ],
         ]);
         $blocks = new ArrayObject;
@@ -184,6 +185,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             'params' => [
                 'itemID' => $item->id,
                 'description' => metadata($item, array('Dublin Core', 'Description'), array('snippet' => 250)),
+                'thumbnailSpec' => $this->getThumbnailSpec($item, 'square_thumbnail'),
             ],
         ]);
         // Set the file IDs to the page front matter.
@@ -248,7 +250,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     /**
      * Execute a command.
      */
-    public function execute($command): void
+    public function execute($command)
     {
         $output = shell_exec($command);
         if (false === $output) {
@@ -260,7 +262,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     /**
      * Create the static site archive (ZIP).
      */
-    public function createSiteArchive(): void
+    public function createSiteArchive()
     {
         $command = sprintf(
             'cd %s && zip --recurse-paths %s %s',
@@ -274,7 +276,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     /**
      * Delete the static site directory.
      */
-    public function deleteSiteDirectory(): void
+    public function deleteSiteDirectory()
     {
         $command = sprintf(
             'rm -r %s',
@@ -285,6 +287,8 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
 
     /**
      * Get the static site record.
+     *
+     * @return StaticSite
      */
     public function getStaticSite()
     {
@@ -306,6 +310,8 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
 
     /**
      * Get the directory path where the static sites are created.
+     *
+     * @return string
      */
     public function getSitesDirectoryPath()
     {
@@ -321,6 +327,8 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
 
     /**
      * Get the directory path of the static site.
+     *
+     * @return string
      */
     public function getSiteDirectoryPath()
     {
@@ -334,6 +342,13 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         return $this->_siteDirectoryPath;
     }
 
+    /**
+     * Add the files gallery block.
+     *
+     * @param Item $item
+     * @param ArrayObject $frontMatterPage
+     * @param ArrayObject $blocks
+     */
     public function addBlockFilesGallery($item, $frontMatterPage, $blocks)
     {
         if (!(metadata($item, 'has files') && (get_theme_option('Item FileGallery') == 1))) {
@@ -352,6 +367,13 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         ];
     }
 
+    /**
+     * Add the tags block.
+     *
+     * @param Item $item
+     * @param ArrayObject $frontMatterPage
+     * @param ArrayObject $blocks
+     */
     public function addBlockTags($item, $frontMatterPage, $blocks)
     {
         if (!metadata($item, 'has tags')) {
@@ -376,5 +398,53 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             'frontMatter' => $frontMatterBlock,
             'markdown' => sprintf('{{< omeka-tags itemPage="items/%s" >}}', $item->id),
         ];
+    }
+
+    /**
+     * Get the thumbnail specification (page and resource).
+     *
+     * @param Omeka_Record_AbstractRecord $record Item or File
+     * @param string $thumbnailType
+     * @return array
+     */
+    public function getThumbnailSpec($record, $thumbnailType)
+    {
+        $thumbnailSpec = [
+            'page' => null,
+            'resource' => null,
+        ];
+        // Get the primary file.
+        $file = null;
+        if ($record instanceof Item) {
+            $file = $record->getFile();
+        } elseif ($record instanceof File) {
+            $file = $record;
+        }
+        if (!$file) {
+            return $thumbnailSpec;
+        }
+        // Set the spec.
+        if ($file->has_derivative_image) {
+            $thumbnailType = in_array($thumbnailType, ['square_thumbnail', 'thumbnail', 'fullsize']) ? $thumbnailType : 'fullsize';
+            $thumbnailSpec['page'] = sprintf('/files/%s', $file->id);
+            $thumbnailSpec['resource'] = sprintf('%s.jpg', $thumbnailType);
+        } else {
+            $topLevelType = explode('/', $file->mime_type)[0];
+            switch ($resourceType) {
+                case 'audio':
+                    $thumbnailSpec['resource'] = '/thumbnails/fallback-audio.png';
+                    break;
+                case 'video':
+                    $thumbnailSpec['resource'] = '/thumbnails/fallback-video.png';
+                    break;
+                case 'image':
+                    $thumbnailSpec['resource'] = '/thumbnails/fallback-image.png';
+                    break;
+                default:
+                    $thumbnailSpec['resource'] = '/thumbnails/fallback-file.png';
+                    break;
+            }
+        }
+        return $thumbnailSpec;
     }
 }
