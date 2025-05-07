@@ -186,9 +186,15 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
                 'description' => metadata($item, array('Dublin Core', 'Description'), array('snippet' => 250)),
             ],
         ]);
+        // Set the file IDs to the page front matter.
+        $files = $item->getFiles();
+        if ($files) {
+            $frontMatterPage['params']['fileIDs'] = array_map(function($file) {return $file->id;}, $files);
+        }
         $blocks = new ArrayObject;
 
-        $this->addTagsBlock($item, $frontMatterPage, $blocks);
+        $this->addBlockFilesGallery($item, $frontMatterPage, $blocks);
+        $this->addBlockTags($item, $frontMatterPage, $blocks);
 
         $this->makeBundleFiles(sprintf('items/%s', $item->id), $item, $frontMatterPage, $blocks);
     }
@@ -328,7 +334,26 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         return $this->_siteDirectoryPath;
     }
 
-    public function addTagsBlock($item, $frontMatterPage, $blocks)
+    public function addBlockFilesGallery($item, $frontMatterPage, $blocks)
+    {
+        if (!(metadata($item, 'has files') && (get_theme_option('Item FileGallery') == 1))) {
+            return;
+        }
+        $frontMatterBlock = new ArrayObject([
+            'params' => [
+                'id' => 'itemfiles',
+                'classes' => ['element'],
+                'blockHeading' => __('Files'),
+            ],
+        ]);
+        $blocks[] = [
+            'name' => 'fileGallery',
+            'frontMatter' => $frontMatterBlock,
+            'markdown' => sprintf('{{< omeka-files-gallery itemPage="items/%s" >}}', $item->id),
+        ];
+    }
+
+    public function addBlockTags($item, $frontMatterPage, $blocks)
     {
         if (!metadata($item, 'has tags')) {
             return;
@@ -351,7 +376,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $blocks[] = [
             'name' => 'tags',
             'frontMatter' => $frontMatterBlock,
-            'markdown' => sprintf('{{< omeka-tags page="items/%s" >}}', $item->id),
+            'markdown' => sprintf('{{< omeka-tags itemPage="items/%s" >}}', $item->id),
         ];
     }
 }
