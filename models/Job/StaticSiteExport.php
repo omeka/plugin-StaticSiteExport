@@ -2,9 +2,66 @@
 class Job_StaticSiteExport extends Omeka_Job_AbstractJob
 {
     protected $_staticSite;
+
     protected $_sitesDirectoryPath;
+
     protected $_siteDirectoryPath;
-    protected $_itemIds;
+
+    protected $_renderersByMimeType = [
+        'audio/ogg' => 'audio',
+        'audio/x-ogg' => 'audio',
+        'audio/aac' => 'audio',
+        'audio/x-aac' => 'audio',
+        'audio/aiff' => 'audio',
+        'audio/x-aiff' => 'audio',
+        'audio/mp3' => 'audio',
+        'audio/mpeg' => 'audio',
+        'audio/mpeg3' => 'audio',
+        'audio/mpegaudio' => 'audio',
+        'audio/mpg' => 'audio',
+        'audio/x-mp3' => 'audio',
+        'audio/x-mpeg' => 'audio',
+        'audio/x-mpeg3' => 'audio',
+        'audio/x-mpegaudio' => 'audio',
+        'audio/x-mpg' => 'audio',
+        'audio/mp4' => 'audio',
+        'audio/x-mp4' => 'audio',
+        'audio/x-m4a' => 'audio',
+        'audio/wav' => 'audio',
+        'audio/x-wav' => 'audio',
+        'video/mp4' => 'video',
+        'video/x-m4v' => 'video',
+        'video/ogg' => 'video',
+        'video/webm' => 'video',
+        'video/quicktime' => 'video',
+    ];
+    protected $_renderersByExtension = [
+        'ogx' => 'audio',
+        'aac' => 'audio',
+        'aif' => 'audio',
+        'aiff' => 'audio',
+        'aifc' => 'audio',
+        'mpga' => 'audio',
+        'mp2' => 'audio',
+        'mp2a' => 'audio',
+        'mp3' => 'audio',
+        'm2a' => 'audio',
+        'm3a' => 'audio',
+        'mp4a' => 'audio',
+        'm4a' => 'audio',
+        'oga' => 'audio',
+        'ogg' => 'audio',
+        'spx' => 'audio',
+        'opus' => 'audio',
+        'wav' => 'audio',
+        'mp4' => 'video',
+        'mp4v' => 'video',
+        'mpg4' => 'video',
+        'm4v' => 'video',
+        'ogv' => 'video',
+        'webm' => 'video',
+        'mov' => 'video',
+    ];
 
     /**
      * Export the static site.
@@ -189,14 +246,33 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             ],
         ]);
 
-        // Set the file IDs to the page front matter.
+        // Set the files data to the page front matter.
         $files = $item->getFiles();
         if ($files) {
-            $frontMatterPage['params']['fileIDs'] = array_map(function($file) {return $file->id;}, $files);
+            $filesParam = [];
+            foreach ($files as $file) {
+                $mimeType = $file->mime_type;
+                $extension = $file->getExtension();
+                if (isset($this->_renderersByMimeType[$mimeType])) {
+                    $renderer = $this->_renderersByMimeType[$mimeType];
+                } elseif (isset($this->_renderersByExtension[$extension])) {
+                    $renderer = $this->_renderersByExtension[$extension];
+                } elseif ($file->hasThumbnail()) {
+                    $renderer = 'image';
+                } else {
+                    $renderer = 'default';
+                }
+                $filesParam[] = [
+                    'id' => $file->id,
+                    'renderer' => $renderer,
+                ];
+            }
+            $frontMatterPage['params']['files'] = $filesParam;
         }
 
         // Add the blocks.
         $blocks = new ArrayObject;
+        $this->addBlockFiles($item, $frontMatterPage, $blocks);
         $this->addBlockElementTexts($item, $frontMatterPage, $blocks);
         $this->addBlockFilesGallery($item, $frontMatterPage, $blocks);
         $this->addBlockTags($item, $frontMatterPage, $blocks);
@@ -385,6 +461,28 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     }
 
     /**
+     * Add the files gallery block.
+     *
+     * @param Item $item
+     * @param ArrayObject $frontMatterPage
+     * @param ArrayObject $blocks
+     */
+    public function addBlockFiles($item, $frontMatterPage, $blocks)
+    {
+        if (!metadata($item, 'has files')) {
+            return;
+        }
+        if (get_theme_option('Item FileGallery')) {
+            return;
+        }
+        $blocks[] = [
+            'name' => 'files',
+            'frontMatter' => new ArrayObject,
+            'markdown' => sprintf('{{< omeka-files itemPage="items/%s" >}}', $item->id),
+        ];
+    }
+
+    /**
      * Add the element texts block.
      *
      * @param Item $item
@@ -393,10 +491,9 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
      */
     public function addBlockElementTexts($item, $frontMatterPage, $blocks)
     {
-        $frontMatterBlock = new ArrayObject([]);
         $blocks[] = [
             'name' => 'elementTexts',
-            'frontMatter' => $frontMatterBlock,
+            'frontMatter' => new ArrayObject,
             'markdown' => sprintf('{{< omeka-element-texts itemPage="items/%s" >}}', $item->id),
         ];
     }
@@ -410,7 +507,10 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
      */
     public function addBlockFilesGallery($item, $frontMatterPage, $blocks)
     {
-        if (!(metadata($item, 'has files') && (get_theme_option('Item FileGallery') == 1))) {
+        if (!metadata($item, 'has files')) {
+            return;
+        }
+        if (!get_theme_option('Item FileGallery')) {
             return;
         }
         $frontMatterBlock = new ArrayObject([
@@ -420,7 +520,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             ],
         ]);
         $blocks[] = [
-            'name' => 'fileGallery',
+            'name' => 'filesGallery',
             'frontMatter' => $frontMatterBlock,
             'markdown' => sprintf('{{< omeka-files-gallery itemPage="items/%s" >}}', $item->id),
         ];
