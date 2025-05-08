@@ -188,22 +188,25 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
                 'thumbnailSpec' => $this->getThumbnailSpec($item, 'square_thumbnail'),
             ],
         ]);
+
         // Set the file IDs to the page front matter.
         $files = $item->getFiles();
         if ($files) {
             $frontMatterPage['params']['fileIDs'] = array_map(function($file) {return $file->id;}, $files);
         }
-        $blocks = new ArrayObject;
 
+        // Add the blocks.
+        $blocks = new ArrayObject;
         $this->addBlockElementTexts($item, $frontMatterPage, $blocks);
         $this->addBlockFilesGallery($item, $frontMatterPage, $blocks);
         $this->addBlockTags($item, $frontMatterPage, $blocks);
 
         $this->makeBundleFiles(sprintf('items/%s', $item->id), $item, $frontMatterPage, $blocks);
 
+        // Make the element texts resource file.
         $this->makeFile(
             sprintf('content/items/%s/element_texts.json', $item->id),
-            json_encode(all_element_texts($item, ['return_type' => 'array']))
+            json_encode($this->getAllElementTexts($item))
         );
     }
 
@@ -346,6 +349,39 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             );
         }
         return $this->_siteDirectoryPath;
+    }
+
+    /**
+     * Get all element texts of the passed record.
+     *
+     * Here we restructure the data as an array of maps. We must do this because
+     * Hugo automatically sorts arrays by key.
+     *
+     * @param Omeka_Record_AbstractRecord $record
+     * @return array
+     */
+    public function getAllElementTexts($record)
+    {
+        $allElementTexts = [];
+        foreach (all_element_texts($record, ['return_type' => 'array']) as $elementSetName => $elements) {
+            $elementSet = [
+                'name' => $elementSetName,
+                'elements' => [],
+            ];
+            $elementKey = 0;
+            foreach ($elements as $elementName => $elementTexts) {
+                $elementSet['elements'][$elementKey] = [
+                    'name' => $elementName,
+                    'texts' => [],
+                ];
+                foreach ($elementTexts as $elementText) {
+                    $elementSet['elements'][$elementKey]['texts'][] = $elementText;
+                }
+                $elementKey++;
+            }
+            $allElementTexts[] = $elementSet;
+        }
+        return $allElementTexts;
     }
 
     /**
