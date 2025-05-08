@@ -123,11 +123,23 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             'baseURL' => $this->getStaticSite()->getDataValue('base_url'),
             'theme' => 'gohugo-theme-omeka-classic',
             'title' => get_option('site_title'),
-            'sectionPagesMenu' => 'main',
             'pagination' => [
                 'pagerSize' => 25,
             ],
-            // 'params' => [],
+            'menus' => [
+                'main' => [
+                    [
+                        'name' => __('Browse items'),
+                        'pageRef' => '/items',
+                        'weight' => 10,
+                    ],
+                    [
+                        'name' => __('Browse collections'),
+                        'pageRef' => '/collections',
+                        'weight' => 20,
+                    ],
+                ],
+            ],
         ]);
 
         $this->makeFile('hugo.json', json_encode($siteConfig->getArrayCopy(), JSON_PRETTY_PRINT));
