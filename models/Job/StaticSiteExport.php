@@ -73,7 +73,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             $this->createSiteDirectory();
             $this->createFilesSection();
             $this->createItemsSection();
-            // $this->createCollectionsSection();
+            $this->createCollectionsSection();
             $this->createSiteArchive();
             $this->deleteSiteDirectory();
             $this->setStatus(Process::STATUS_COMPLETED);
@@ -240,7 +240,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     }
 
     /**
-     * Create a file bundle.
+     * Create an item bundle.
      */
     public function createItemBundle($item)
     {
@@ -295,6 +295,58 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $this->makeFile(
             sprintf('content/items/%s/element_texts.json', $item->id),
             json_encode($this->getAllElementTexts($item))
+        );
+    }
+
+    /**
+     * Create the collections section.
+     */
+    public function createCollectionsSection()
+    {
+        $frontMatter = [
+            'title' => __('Collections'),
+            'params' => [],
+        ];
+        $this->makeFile('content/collections/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
+
+        $page = 1;
+        do {
+            $collections = get_db()->getTable('Collection')->findBy([], 100, $page++);
+            foreach ($collections as $collection) {
+                $this->createCollectionBundle($collection);
+            }
+        } while ($collections);
+    }
+
+    /**
+     * Create a collection bundle.
+     */
+    public function createCollectionBundle($collection)
+    {
+        $this->makeDirectory(sprintf('content/collections/%s', $collection->id));
+        $this->makeDirectory(sprintf('content/collections/%s/blocks', $collection->id));
+
+        $frontMatterPage = new ArrayObject([
+            'date' => (new DateTime(metadata($collection, 'added')))->format('c'),
+            'title' => metadata($collection, 'display_title'),
+            'draft' => $collection->public ? false : true,
+            'params' => [
+                'collectionID' => $collection->id,
+                'description' => metadata($collection, array('Dublin Core', 'Description'), array('snippet' => 250)),
+                'thumbnailSpec' => $this->getThumbnailSpec($collection, 'square_thumbnail'),
+            ],
+        ]);
+
+        // Add the blocks.
+        $blocks = new ArrayObject;
+        $this->addBlockElementTexts($collection, $frontMatterPage, $blocks);
+
+        $this->makeBundleFiles(sprintf('collections/%s', $collection->id), $collection, $frontMatterPage, $blocks);
+
+        // Make the element texts resource file.
+        $this->makeFile(
+            sprintf('content/collections/%s/element_texts.json', $collection->id),
+            json_encode($this->getAllElementTexts($collection))
         );
     }
 
@@ -497,16 +549,23 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     /**
      * Add the element texts block.
      *
-     * @param Item $item
+     * @param Omeka_Record_AbstractRecord $record
      * @param ArrayObject $frontMatterPage
      * @param ArrayObject $blocks
      */
-    public function addBlockElementTexts($item, $frontMatterPage, $blocks)
+    public function addBlockElementTexts($record, $frontMatterPage, $blocks)
     {
+        if ($record instanceof Item) {
+            $section = 'items';
+        } elseif ($record instanceof Collection) {
+            $section = 'collections';
+        } else {
+            return;
+        }
         $blocks[] = [
             'name' => 'elementTexts',
             'frontMatter' => new ArrayObject,
-            'markdown' => sprintf('{{< omeka-element-texts itemPage="items/%s" >}}', $item->id),
+            'markdown' => sprintf('{{< omeka-element-texts page="%s/%s" >}}', $section, $record->id),
         ];
     }
 
@@ -585,12 +644,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             'resource' => null,
         ];
         // Get the primary file.
-        $file = null;
-        if ($record instanceof Item) {
-            $file = $record->getFile();
-        } elseif ($record instanceof File) {
-            $file = $record;
-        }
+        $file = $record->getFile();
         if (!$file) {
             return $thumbnailSpec;
         }
@@ -601,7 +655,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             $thumbnailSpec['resource'] = sprintf('%s.jpg', $thumbnailType);
         } else {
             $topLevelType = explode('/', $file->mime_type)[0];
-            switch ($resourceType) {
+            switch ($topLevelType) {
                 case 'audio':
                     $thumbnailSpec['resource'] = '/thumbnails/fallback-audio.png';
                     break;
