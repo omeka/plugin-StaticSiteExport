@@ -115,8 +115,6 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
 
         // @todo: Copy shortcodes provided by plugins?
         // @todo: Copy vendor packages provided by plugins?
-        // @todo: Build the Hugo menu from Omeka site navigation.
-        // @todo: Get the homepage.
 
         // Make the hugo.json configuration file.
         $siteConfig = new ArrayObject([
@@ -138,9 +136,16 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
                         'pageRef' => '/collections',
                         'weight' => 20,
                     ],
+                    [
+                        'name' => __('Browse tags'),
+                        'pageRef' => '/tags',
+                        'weight' => 30,
+                    ],
                 ],
             ],
         ]);
+
+        // @todo: Trigger the site config event.
 
         $this->makeFile('hugo.json', json_encode($siteConfig->getArrayCopy(), JSON_PRETTY_PRINT));
     }
@@ -151,7 +156,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     public function createFilesSection()
     {
         $frontMatter = [
-            'title' => __('Files'),
+            'title' => __('Browse files'),
             'params' => [],
         ];
         $this->makeFile('content/files/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
@@ -185,6 +190,8 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             ],
         ]);
         $blocks = new ArrayObject;
+
+        // @todo: Trigger the file bundle event.
 
         $this->makeBundleFiles(sprintf('files/%s', $file->id), $file, $frontMatterPage, $blocks);
 
@@ -225,7 +232,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     public function createItemsSection()
     {
         $frontMatter = [
-            'title' => __('Items'),
+            'title' => __('Browse items'),
             'params' => [],
         ];
         $this->makeFile('content/items/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
@@ -247,12 +254,14 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $this->makeDirectory(sprintf('content/items/%s', $item->id));
         $this->makeDirectory(sprintf('content/items/%s/blocks', $item->id));
 
+        $collection = $item->getCollection();
         $frontMatterPage = new ArrayObject([
             'date' => (new DateTime(metadata($item, 'added')))->format('c'),
             'title' => metadata($item, 'display_title'),
             'draft' => $item->public ? false : true,
             'params' => [
                 'itemID' => $item->id,
+                'collectionID' => $collection ? $collection->id : null,
                 'description' => metadata($item, array('Dublin Core', 'Description'), array('snippet' => 250)),
                 'thumbnailSpec' => $this->getThumbnailSpec($item, 'square_thumbnail'),
             ],
@@ -289,6 +298,8 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $this->addBlockFilesGallery($item, $frontMatterPage, $blocks);
         $this->addBlockTags($item, $frontMatterPage, $blocks);
 
+        // @todo: Trigger the item bundle event.
+
         $this->makeBundleFiles(sprintf('items/%s', $item->id), $item, $frontMatterPage, $blocks);
 
         // Make the element texts resource file.
@@ -304,7 +315,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     public function createCollectionsSection()
     {
         $frontMatter = [
-            'title' => __('Collections'),
+            'title' => __('Browse collections'),
             'params' => [],
         ];
         $this->makeFile('content/collections/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
@@ -340,6 +351,8 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         // Add the blocks.
         $blocks = new ArrayObject;
         $this->addBlockElementTexts($collection, $frontMatterPage, $blocks);
+
+        // @todo: Trigger the collection bundle event.
 
         $this->makeBundleFiles(sprintf('collections/%s', $collection->id), $collection, $frontMatterPage, $blocks);
 
