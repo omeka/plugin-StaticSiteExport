@@ -10,6 +10,7 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
         'define_routes',
         'config_form',
         'config',
+        'static_site_export_site_config',
     ];
 
     protected $_filters = [
@@ -106,5 +107,14 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
     public static function sitesDirectoryPathIsValid($sitesDirectoryPath)
     {
         return (is_dir($sitesDirectoryPath) && is_writable($sitesDirectoryPath));
+    }
+
+    public function hookStaticSiteExportSiteConfig($args)
+    {
+        $args['site_config']['menus']['main'][] = [
+            'name' => __('Browse exhibits'),
+            'pageRef' => '/exhibits',
+            'weight' => 40,
+        ];
     }
 }

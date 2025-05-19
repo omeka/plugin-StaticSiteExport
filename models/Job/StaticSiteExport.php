@@ -145,7 +145,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             ],
         ]);
 
-        // @todo: Trigger the site config event.
+        $this->fireHook('static_site_export_site_config', ['site_config' => $siteConfig]);
 
         $this->makeFile('hugo.json', json_encode($siteConfig->getArrayCopy(), JSON_PRETTY_PRINT));
     }
@@ -684,5 +684,16 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             }
         }
         return $thumbnailSpec;
+    }
+
+    /**
+     * Fire a plugin hook.
+     *
+     * @param string $name The hook name
+     * @param array $args The hook arguments
+     */
+    public function fireHook($name, $args)
+    {
+        fire_plugin_hook($name, array_merge($args, ['job' => $this]));
     }
 }
