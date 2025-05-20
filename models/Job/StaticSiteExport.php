@@ -71,9 +71,12 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         try {
             $this->setStatus(Process::STATUS_IN_PROGRESS);
             $this->createSiteDirectory();
+
             $this->createFilesSection();
             $this->createItemsSection();
             $this->createCollectionsSection();
+            $this->fireHook('static_site_export_section_create', []);
+
             $this->createSiteArchive();
             $this->deleteSiteDirectory();
             $this->setStatus(Process::STATUS_COMPLETED);
@@ -92,9 +95,6 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $this->makeDirectory('assets');
         $this->makeDirectory('assets/thumbnails');
         $this->makeDirectory('content');
-        $this->makeDirectory('content/files');
-        $this->makeDirectory('content/items');
-        $this->makeDirectory('content/collections');
         $this->makeDirectory('data');
         $this->makeDirectory('i18n');
         $this->makeDirectory('layouts');
@@ -159,6 +159,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             'title' => __('Browse files'),
             'params' => [],
         ];
+        $this->makeDirectory('content/files');
         $this->makeFile('content/files/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
 
         $page = 1;
@@ -235,6 +236,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             'title' => __('Browse items'),
             'params' => [],
         ];
+        $this->makeDirectory('content/items');
         $this->makeFile('content/items/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
 
         $page = 1;
@@ -318,6 +320,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             'title' => __('Browse collections'),
             'params' => [],
         ];
+        $this->makeDirectory('content/collections');
         $this->makeFile('content/collections/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
 
         $page = 1;
