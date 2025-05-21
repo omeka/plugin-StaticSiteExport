@@ -70,12 +70,13 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     {
         try {
             $this->setStatus(Process::STATUS_IN_PROGRESS);
-            $this->createSiteDirectory();
 
+            $this->fireHook('static_site_export_site_export_pre', []);
+            $this->createSiteDirectory();
             $this->createFilesSection();
             $this->createItemsSection();
             $this->createCollectionsSection();
-            $this->fireHook('static_site_export_section_create', []);
+            $this->fireHook('static_site_export_site_export_post', []);
 
             $this->createSiteArchive();
             $this->deleteSiteDirectory();
