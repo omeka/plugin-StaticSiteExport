@@ -119,7 +119,6 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
 
         // Make the hugo.json configuration file.
         $siteConfig = new ArrayObject([
-            'baseURL' => $this->getStaticSite()->getDataValue('base_url'),
             'theme' => 'gohugo-theme-omeka-classic',
             'title' => get_option('site_title'),
             'pagination' => [
