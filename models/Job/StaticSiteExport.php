@@ -114,6 +114,7 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         );
         $this->execute($command);
 
+        // Add vendor packages.
         $vendorPackages = apply_filters('static_site_export_vendor_packages', [], ['job' => $this]);
         foreach ($vendorPackages as $packageName => $fromDirectoryPath) {
             if (!is_dir($fromDirectoryPath)) {
@@ -134,8 +135,19 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             $this->execute($command);
         }
 
+        // Add shortcodes.
         $shortcodes = apply_filters('static_site_export_shortcodes', [], ['job' => $this]);
-        // @todo: Copy shortcodes provided by plugins
+        foreach ($shortcodes as $shortcodeName => $fromShortcodePath) {
+            if (!is_file($fromShortcodePath)) {
+                continue; // Skip non-files.
+            }
+            $command = sprintf(
+                'cp %s %s',
+                escapeshellarg($fromShortcodePath),
+                escapeshellarg(sprintf('%s/layouts/shortcodes/%s.html', $this->getSiteDirectoryPath(), $shortcodeName))
+            );
+            $this->execute($command);
+        }
 
         // Make the hugo.json configuration file.
         $siteConfig = new ArrayObject([
