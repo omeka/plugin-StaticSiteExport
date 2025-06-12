@@ -114,8 +114,28 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         );
         $this->execute($command);
 
-        // @todo: Copy shortcodes provided by plugins?
-        // @todo: Copy vendor packages provided by plugins?
+        $vendorPackages = apply_filters('static_site_export_vendor_packages', [], ['job' => $this]);
+        foreach ($vendorPackages as $packageName => $fromDirectoryPath) {
+            if (!is_dir($fromDirectoryPath)) {
+                continue; // Skip non-directories.
+            }
+            if (in_array($packageName, ['jquery'])) {
+                continue; // Skip existing packages.
+            }
+            // Make the package directory under vendor.
+            $toDirectoryPath = sprintf('static/vendor/%s', $packageName);
+            $this->makeDirectory($toDirectoryPath);
+            // Copy packages into the vendor directory.
+            $command = sprintf(
+                'cp --recursive %s %s',
+                sprintf('%s/*', escapeshellarg($fromDirectoryPath)),
+                escapeshellarg(sprintf('%s/%s', $this->getSiteDirectoryPath(), $toDirectoryPath))
+            );
+            $this->execute($command);
+        }
+
+        $shortcodes = apply_filters('static_site_export_shortcodes', [], ['job' => $this]);
+        // @todo: Copy shortcodes provided by plugins
 
         // Make the hugo.json configuration file.
         $siteConfig = new ArrayObject([
