@@ -149,6 +149,40 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             $this->execute($command);
         }
 
+        // Add homepage content.
+        $frontMatter = [
+            'title' => get_option('site_title'),
+            'params' => [
+                'homepageText' => get_theme_option('Homepage Text'),
+            ],
+        ];
+        $featuredItem = get_random_featured_items(1);
+        if ($featuredItem) {
+            $frontMatter['params']['featuredItem'] = [
+                'itemID' => $featuredItem[0]->id,
+                'thumbnailSpec' => $this->getThumbnailSpec($featuredItem[0], 'square_thumbnail'),
+            ];
+        }
+        $featuredCollection = get_random_featured_collection();
+        if ($featuredCollection) {
+            $frontMatter['params']['featuredCollection'] = [
+                'collectionID' => $featuredCollection->id,
+                'thumbnailSpec' => $this->getThumbnailSpec($featuredCollection, 'square_thumbnail'),
+            ];
+        }
+        $recentItemsConfig = [];
+        foreach (get_recent_items(3) as $recentItem) {
+            $recentItemsConfig[] = [
+                'itemID' => $recentItem->id,
+                'thumbnailSpec' => $this->getThumbnailSpec($recentItem, 'square_thumbnail'),
+            ];
+        }
+        $frontMatter['params']['recentItems'] = $recentItemsConfig;
+        $this->makeFile(
+            'content/_index.md',
+            sprintf("%s\n%s", json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT), '{{< omeka-homepage >}}')
+        );
+
         // Make the hugo.json configuration file.
         $siteConfig = new ArrayObject([
             'theme' => 'gohugo-theme-omeka-classic',
