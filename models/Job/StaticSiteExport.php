@@ -258,7 +258,12 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         ]);
         $blocks = new ArrayObject;
 
-        // @todo: Trigger the file bundle event.
+        // Fire the file bundle hook.
+        $this->fireHook('static_site_export_file_bundle', [
+            'file' => $file,
+            'front_matter_page' => $frontMatterPage,
+            'blocks' => $blocks,
+        ]);
 
         $this->makeBundleFiles(sprintf('files/%s', $file->id), $file, $frontMatterPage, $blocks);
 
@@ -366,7 +371,12 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $this->addBlockFilesGallery($item, $frontMatterPage, $blocks);
         $this->addBlockTags($item, $frontMatterPage, $blocks);
 
-        // @todo: Trigger the item bundle event.
+        // Fire the item bundle hook.
+        $this->fireHook('static_site_export_item_bundle', [
+            'item' => $item,
+            'front_matter_page' => $frontMatterPage,
+            'blocks' => $blocks,
+        ]);
 
         $this->makeBundleFiles(sprintf('items/%s', $item->id), $item, $frontMatterPage, $blocks);
 
@@ -421,7 +431,12 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
         $blocks = new ArrayObject;
         $this->addBlockElementTexts($collection, $frontMatterPage, $blocks);
 
-        // @todo: Trigger the collection bundle event.
+        // Fire the collection bundle hook.
+        $this->fireHook('static_site_export_collection_bundle', [
+            'collection' => $collection,
+            'front_matter_page' => $frontMatterPage,
+            'blocks' => $blocks,
+        ]);
 
         $this->makeBundleFiles(sprintf('collections/%s', $collection->id), $collection, $frontMatterPage, $blocks);
 
