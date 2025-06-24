@@ -52,25 +52,15 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
     {
         $acl = $args['acl'];
 
+        $acl->addResource('StaticSiteExport_StaticSite');
+
         $indexResource = new Zend_Acl_Resource('StaticSiteExport_Index');
         $acl->add($indexResource);
     }
 
     public function hookDefineRoutes($args)
     {
-        $router = $args['router'];
-
-        $router->addRoute(
-            'static-site-export',
-            new Zend_Controller_Router_Route(
-                'static-site-export/:action',
-                [
-                    'module' => 'static-site-export',
-                    'controller' => 'index',
-                    'action' => 'browse',
-                ]
-            )
-        );
+        $args['router']->addConfig(new Zend_Config_Ini(dirname(__FILE__) . '/routes.ini', 'routes'));
     }
 
     public function hookConfigForm()

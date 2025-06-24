@@ -8,7 +8,10 @@ echo flash();
 <?php if ($total_results): ?>
 
 <?php echo pagination_links(['attributes' => ['aria-label' => __('Top pagination')]]); ?>
+
+<?php if (is_allowed('StaticSiteExport_StaticSite', 'export')): ?>
 <a href="<?php echo html_escape(url('static-site-export/export')); ?>" class="add full-width-mobile button green"><?php echo __('Export a Site'); ?></a>
+<?php endif; ?>
 
 <div class="table-responsive">
     <table>
@@ -24,7 +27,16 @@ echo flash();
             <?php foreach (loop('StaticSite') as $staticSite): ?>
             <?php $owner = $staticSite->getOwner(); ?>
             <tr>
-                <td><span class="title"><?php echo html_escape($staticSite->getName()); ?></a></span></td>
+                <td>
+                    <span class="title"><?php echo html_escape($staticSite->getName()); ?></a></span>
+                    <?php if (in_array($staticSite->getStatus(), [Process::STATUS_COMPLETED, Process::STATUS_ERROR])): ?>
+                    <ul class="action-links group">
+                        <?php if (is_allowed($staticSite, 'delete')): ?>
+                        <li><?php echo link_to($staticSite, 'delete-confirm', __('Delete'), ['class' => 'delete-confirm']) ?></li>
+                        <?php endif; ?>
+                    </ul>
+                    <?php endif; ?>
+                </td>
                 <td><?php echo $staticSite->getStatus(); ?></td>
                 <td><?php echo $owner ? sprintf('%s (%s)', $owner->name, $owner->username) : ''; ?></td>
                 <td><?php echo format_date(metadata('static_site', 'added'), Zend_Date::DATETIME_MEDIUM); ?></td>

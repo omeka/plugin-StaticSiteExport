@@ -1,5 +1,5 @@
 <?php
-class StaticSite extends Omeka_Record_AbstractRecord
+class StaticSite extends Omeka_Record_AbstractRecord implements Zend_Acl_Resource_Interface
 {
     public $owner_id;
     public $added;
@@ -77,5 +77,28 @@ class StaticSite extends Omeka_Record_AbstractRecord
     public function getDisplayStatus()
     {
         return $this->status;
+    }
+
+    public function getResourceId()
+    {
+        return 'StaticSiteExport_StaticSite';
+    }
+
+    public function getRecordUrl($action = 'show')
+    {
+        return array('controller' => 'static-site-export', 'action' => $action, 'id' => $this->getId());
+    }
+
+    protected function afterDelete()
+    {
+        if (!in_array($this->getStatus(), [Process::STATUS_COMPLETED, Process::STATUS_ERROR])) {
+            return;
+        }
+        // Dispatch the static site delete job.
+        $dispatcher = Zend_Registry::get('job_dispatcher');
+        $dispatcher->sendLongRunning(
+            'Job_StaticSiteDelete',
+            ['static_site_name' => $this->getName()]
+        );
     }
 }

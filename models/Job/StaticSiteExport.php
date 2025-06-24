@@ -1,12 +1,6 @@
 <?php
-class Job_StaticSiteExport extends Omeka_Job_AbstractJob
+class Job_StaticSiteExport extends Job_AbstractStaticSite
 {
-    protected $_staticSite;
-
-    protected $_sitesDirectoryPath;
-
-    protected $_siteDirectoryPath;
-
     protected $_renderersByMimeType = [
         'audio/ogg' => 'audio',
         'audio/x-ogg' => 'audio',
@@ -475,37 +469,6 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
     }
 
     /**
-     * Make a directory in the static site directory.
-     */
-    public function makeDirectory($directoryPath)
-    {
-        mkdir(sprintf('%s/%s', $this->getSiteDirectoryPath(), $directoryPath), 0755, true);
-    }
-
-    /**
-     * Make a file in the static site directory.
-     */
-    public function makeFile($filePath, $content = '')
-    {
-        file_put_contents(
-            sprintf('%s/%s', $this->getSiteDirectoryPath(), $filePath),
-            $content
-        );
-    }
-
-    /**
-     * Execute a command.
-     */
-    public function execute($command)
-    {
-        $output = shell_exec($command);
-        if (false === $output) {
-            // Stop the job.
-            throw new Exception(sprintf('Invalid command: %s', $command));
-        }
-    }
-
-    /**
      * Create the static site archive (ZIP).
      */
     public function createSiteArchive()
@@ -517,75 +480,6 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             $this->getStaticSite()->getName()
         );
         $this->execute($command);
-    }
-
-    /**
-     * Delete the static site directory.
-     */
-    public function deleteSiteDirectory()
-    {
-        $command = sprintf(
-            'rm -r %s',
-            escapeshellarg($this->getSiteDirectoryPath())
-        );
-        $this->execute($command);
-    }
-
-    /**
-     * Get the static site record.
-     *
-     * @return StaticSite
-     */
-    public function getStaticSite()
-    {
-        if (null === $this->_staticSite) {
-            $staticSiteId = $this->_options['static_site_id'];
-            $this->_staticSite = $this->_db->getTable('StaticSite')->find($staticSiteId);
-        }
-        return $this->_staticSite;
-    }
-
-    /**
-     * Set the status of the static site export process.
-     */
-    public function setStatus($status)
-    {
-        $this->getStaticSite()->setStatus($status);
-        $this->getStaticSite()->save();
-    }
-
-    /**
-     * Get the directory path where the static sites are created.
-     *
-     * @return string
-     */
-    public function getSitesDirectoryPath()
-    {
-        if (null === $this->_sitesDirectoryPath) {
-            $sitesDirectoryPath = get_option('static_site_export_sites_directory_path');
-            if (!StaticSiteExportPlugin::sitesDirectoryPathIsValid($sitesDirectoryPath)) {
-                throw new Exception\RuntimeException('Invalid directory path');
-            }
-            $this->_sitesDirectoryPath = $sitesDirectoryPath;
-        }
-        return $this->_sitesDirectoryPath;
-    }
-
-    /**
-     * Get the directory path of the static site.
-     *
-     * @return string
-     */
-    public function getSiteDirectoryPath()
-    {
-        if (null === $this->_siteDirectoryPath) {
-            $this->_siteDirectoryPath = sprintf(
-                '%s/%s',
-                $this->getSitesDirectoryPath(),
-                $this->getStaticSite()->getName()
-            );
-        }
-        return $this->_siteDirectoryPath;
     }
 
     /**
@@ -768,16 +662,5 @@ class Job_StaticSiteExport extends Omeka_Job_AbstractJob
             }
         }
         return $thumbnailSpec;
-    }
-
-    /**
-     * Fire a plugin hook.
-     *
-     * @param string $name The hook name
-     * @param array $args The hook arguments
-     */
-    public function fireHook($name, $args)
-    {
-        fire_plugin_hook($name, array_merge($args, ['job' => $this]));
     }
 }

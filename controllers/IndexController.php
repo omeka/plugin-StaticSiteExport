@@ -46,4 +46,14 @@ class StaticSiteExport_IndexController extends Omeka_Controller_AbstractActionCo
     {
         return array('added', 'd');
     }
+
+    protected function _getDeleteConfirmMessage($staticSite)
+    {
+        return __(sprintf('This will delete the static site "%s".', $staticSite->getName()));
+    }
+
+    protected function _getDeleteSuccessMessage($staticSite)
+    {
+        return __(sprintf('The static site "%s" was successfully deleted.', $staticSite->getName()));
+    }
 }
