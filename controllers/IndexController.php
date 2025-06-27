@@ -23,7 +23,9 @@ class StaticSiteExport_IndexController extends Omeka_Controller_AbstractActionCo
                 return;
             }
             $staticSite = new StaticSite;
-            $staticSite->setData([]);
+            $staticSite->setData([
+                 'theme' => $_POST['theme'],
+            ]);
             if ($staticSite->save(false)) {
 
                 // Dispatch the static site export job.

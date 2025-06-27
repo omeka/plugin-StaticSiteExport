@@ -184,6 +184,9 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
             'pagination' => [
                 'pagerSize' => 25,
             ],
+            'params' => [
+                'theme' => $this->getStaticSite()->getDataValue('theme'),
+            ],
             'menus' => [
                 'main' => [
                     [
