@@ -24,7 +24,8 @@ class StaticSiteExport_IndexController extends Omeka_Controller_AbstractActionCo
             }
             $staticSite = new StaticSite;
             $staticSite->setData([
-                 'theme' => $_POST['theme'],
+                'base_url' => $_POST['base_url'],
+                'theme' => $_POST['theme'],
             ]);
             if ($staticSite->save(false)) {
 
