@@ -303,7 +303,11 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
     {
         $frontMatter = [
             'title' => __('Browse items'),
-            'params' => [],
+            'params' => [
+                'bodyClasses' => [
+                    'items browse',
+                ],
+            ],
         ];
         $this->makeDirectory('content/items');
         $this->makeFile('content/items/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
@@ -335,6 +339,9 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
                 'collectionID' => $collection ? $collection->id : null,
                 'description' => metadata($item, array('Dublin Core', 'Description'), array('snippet' => 250)),
                 'thumbnailSpec' => $this->getThumbnailSpec($item, 'square_thumbnail'),
+                'bodyClasses' => [
+                    'items show',
+                ],
             ],
         ]);
 
@@ -392,7 +399,11 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
     {
         $frontMatter = [
             'title' => __('Browse collections'),
-            'params' => [],
+            'params' => [
+                'bodyClasses' => [
+                    'collections browse'
+                ]
+            ],
         ];
         $this->makeDirectory('content/collections');
         $this->makeFile('content/collections/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
@@ -422,6 +433,9 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
                 'collectionID' => $collection->id,
                 'description' => metadata($collection, array('Dublin Core', 'Description'), array('snippet' => 250)),
                 'thumbnailSpec' => $this->getThumbnailSpec($collection, 'square_thumbnail'),
+                'bodyClasses' => [
+                    'collections show',
+                ],
             ],
         ]);
 
