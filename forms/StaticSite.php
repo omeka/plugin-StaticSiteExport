@@ -15,5 +15,9 @@ class StaticSiteExport_Form_StaticSite extends Omeka_Form
                 'default' => 'default',
             ],
         ]);
+        $this->addElement('checkbox', 'include_private', [
+            'label' => __('Include private resources'),
+            'description' => __('Check to include private resources in the export. The default behavior is to exclude private resources. This must be set prior to export.'),
+        ]);
     }
 }

@@ -18,8 +18,8 @@ will be saved on your server. The path must exist and be writable by the web ser
 After installing and configuring this plugin, click on "Static Site Export" in the
 navigation, and click the "Export static site" button.
 
-On this page you will configure the export. **Currently there are no configuration
-options.**
+On this page you will configure the export by entering a "Base URL", selecting a
+"Theme", and declaring whether to "Include private resources".
 
 After configuring the export, click the "Export static site" button. The new export
 will be the first in the list and will include the status of the export job. The

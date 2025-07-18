@@ -17,6 +17,11 @@ echo flash();
             <?php echo $this->form->getElement('theme'); ?>
         </div>
     </section>
+    <section class="seven columns alpha" id="edit-form">
+        <div class="field">
+            <?php echo $this->form->getElement('include_private'); ?>
+        </div>
+    </section>
     <section class="three columns omega">
         <div id="save" class="panel">
             <input type="submit" name="submit" class="submit big green button" id="export_static_site" value="<?php echo __('Export Static Site'); ?>" />

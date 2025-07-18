@@ -150,28 +150,6 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
                 'homepageText' => get_theme_option('Homepage Text'),
             ],
         ];
-        $featuredItem = get_random_featured_items(1);
-        if ($featuredItem) {
-            $frontMatter['params']['featuredItem'] = [
-                'itemID' => $featuredItem[0]->id,
-                'thumbnailSpec' => $this->getThumbnailSpec($featuredItem[0], 'square_thumbnail'),
-            ];
-        }
-        $featuredCollection = get_random_featured_collection();
-        if ($featuredCollection) {
-            $frontMatter['params']['featuredCollection'] = [
-                'collectionID' => $featuredCollection->id,
-                'thumbnailSpec' => $this->getThumbnailSpec($featuredCollection, 'square_thumbnail'),
-            ];
-        }
-        $recentItemsConfig = [];
-        foreach (get_recent_items(3) as $recentItem) {
-            $recentItemsConfig[] = [
-                'itemID' => $recentItem->id,
-                'thumbnailSpec' => $this->getThumbnailSpec($recentItem, 'square_thumbnail'),
-            ];
-        }
-        $frontMatter['params']['recentItems'] = $recentItemsConfig;
         $this->makeFile(
             'content/_index.md',
             sprintf("%s\n%s", json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT), '{{< omeka-homepage >}}')
@@ -228,6 +206,8 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
 
         $page = 1;
         do {
+            // Note that we cannot filter files by "public" so, instead, we fetch
+            // all files here and filter them in self::createFileBundle().
             $files = get_db()->getTable('File')->findBy([], 100, $page++);
             foreach ($files as $file) {
                 $this->createFileBundle($file);
@@ -242,13 +222,19 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
     {
         $item = $file->getItem();
 
+        // Respect the include_private configuration.
+        $includePrivate = $this->getStaticSite()->getDataValue('include_private');
+        if (!$includePrivate && !$item->public) {
+            return;
+        }
+
         $this->makeDirectory(sprintf('content/files/%s', $file->id));
         $this->makeDirectory(sprintf('content/files/%s/blocks', $file->id));
 
         $frontMatterPage = new ArrayObject([
             'date' => (new DateTime(metadata($file, 'added')))->format('c'),
             'title' => $file->original_filename,
-            'draft' => $item->public ? false : true,
+            'draft' => false,
             'params' => [
                 'fileID' => $file->id,
                 'thumbnailSpec' => $this->getThumbnailSpec($file, 'square_thumbnail'),
@@ -312,9 +298,15 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
         $this->makeDirectory('content/items');
         $this->makeFile('content/items/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
 
+
+        $query = [];
+        // Respect the include_private configuration.
+        if (!$this->getStaticSite()->getDataValue('include_private')) {
+            $query['public'] = true;
+        }
         $page = 1;
         do {
-            $items = get_db()->getTable('Item')->findBy([], 100, $page++);
+            $items = get_db()->getTable('Item')->findBy($query, 100, $page++);
             foreach ($items as $item) {
                 $this->createItemBundle($item);
             }
@@ -333,10 +325,11 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
         $frontMatterPage = new ArrayObject([
             'date' => (new DateTime(metadata($item, 'added')))->format('c'),
             'title' => metadata($item, 'display_title'),
-            'draft' => $item->public ? false : true,
+            'draft' => false,
             'params' => [
                 'itemID' => $item->id,
                 'collectionID' => $collection ? $collection->id : null,
+                'featured' => $item->featured,
                 'description' => metadata($item, array('Dublin Core', 'Description'), array('snippet' => 250)),
                 'thumbnailSpec' => $this->getThumbnailSpec($item, 'square_thumbnail'),
                 'bodyClasses' => [
@@ -408,9 +401,14 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
         $this->makeDirectory('content/collections');
         $this->makeFile('content/collections/_index.md', json_encode($frontMatter, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT));
 
+        $query = [];
+        // Respect the include_private configuration.
+        if (!$this->getStaticSite()->getDataValue('include_private')) {
+            $query['public'] = true;
+        }
         $page = 1;
         do {
-            $collections = get_db()->getTable('Collection')->findBy([], 100, $page++);
+            $collections = get_db()->getTable('Collection')->findBy($query, 100, $page++);
             foreach ($collections as $collection) {
                 $this->createCollectionBundle($collection);
             }
@@ -428,9 +426,10 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
         $frontMatterPage = new ArrayObject([
             'date' => (new DateTime(metadata($collection, 'added')))->format('c'),
             'title' => metadata($collection, 'display_title'),
-            'draft' => $collection->public ? false : true,
+            'draft' => false,
             'params' => [
                 'collectionID' => $collection->id,
+                'featured' => $collection->featured,
                 'description' => metadata($collection, array('Dublin Core', 'Description'), array('snippet' => 250)),
                 'thumbnailSpec' => $this->getThumbnailSpec($collection, 'square_thumbnail'),
                 'bodyClasses' => [
