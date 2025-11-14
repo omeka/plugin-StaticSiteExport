@@ -33,9 +33,8 @@ are likely already installed on your server, so there's nothing you need to do.
 
 ### Building a static site
 
-Note that the minimum version of [Hugo](https://gohugo.io/) you should use for 
-building a static site is 0.146.0. Using a lower version may build without error, 
-but the site may not render correctly. This is primarily due to the [new template system](https://gohugo.io/templates/new-templatesystem-overview/)
+Note that the minimum version of [Hugo](https://gohugo.io/) you must use for building
+a static site is **0.146.0**. This is primarily due to the [new template system](https://gohugo.io/templates/new-templatesystem-overview/)
 introduced in that version.
 
 After exporting a static site, you can unzip the resulting ZIP file and immediately

@@ -93,8 +93,8 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
         $this->makeDirectory('data');
         $this->makeDirectory('i18n');
         $this->makeDirectory('layouts');
-        $this->makeDirectory('layouts/partials');
-        $this->makeDirectory('layouts/shortcodes');
+        $this->makeDirectory('layouts/_partials');
+        $this->makeDirectory('layouts/_shortcodes');
         $this->makeDirectory('static');
         $this->makeDirectory('static/js');
         $this->makeDirectory('themes');
@@ -138,7 +138,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
             $command = sprintf(
                 'cp %s %s',
                 escapeshellarg($fromShortcodePath),
-                escapeshellarg(sprintf('%s/layouts/shortcodes/%s.html', $this->getSiteDirectoryPath(), $shortcodeName))
+                escapeshellarg(sprintf('%s/layouts/_shortcodes/%s.html', $this->getSiteDirectoryPath(), $shortcodeName))
             );
             $this->execute($command);
         }
