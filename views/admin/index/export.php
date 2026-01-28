@@ -6,21 +6,11 @@ echo head([
 echo flash();
 ?>
 
-<form method="post" enctype="multipart/form-data" id="item-form" action="">
-    <section class="seven columns alpha" id="edit-form">
-        <div class="field">
-            <?php echo $this->form->getElement('base_url'); ?>
-        </div>
-    </section>
-    <section class="seven columns alpha" id="edit-form">
-        <div class="field">
-            <?php echo $this->form->getElement('theme'); ?>
-        </div>
-    </section>
-    <section class="seven columns alpha" id="edit-form">
-        <div class="field">
-            <?php echo $this->form->getElement('include_private'); ?>
-        </div>
+<form method="post" action="">
+    <section class="seven columns alpha">
+        <?php echo $form->getElement('base_url'); ?>
+        <?php echo $form->getElement('theme'); ?>
+        <?php echo $form->getElement('include_private'); ?>
     </section>
     <section class="three columns omega">
         <div id="save" class="panel">
