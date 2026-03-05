@@ -46,14 +46,16 @@ echo flash();
     </table>
 </div>
 
-<a href="<?php echo html_escape(url('static-site-export/export')); ?>" class="add full-width-mobile button green"><?php echo __('Export a Site'); ?></a>
 <?php echo pagination_links(['attributes' => ['aria-label' => __('Bottom pagination')]]); ?>
 
 <?php else: ?>
 
-<h2><?php echo __('You have no static sites.'); ?></h2>
+<h2><?php echo __('There are no static sites.'); ?></h2>
+
+<?php if (is_allowed('StaticSiteExport_StaticSite', 'export')): ?>
 <p><?php echo __('Get started by exporting your first static site.'); ?></p>
-<a href="<?php echo html_escape(url('static-site-export/export')); ?>" class="add big green button"><?php echo __('Export a Site'); ?></a>
+<a href="<?php echo html_escape(url('static-site-export/export')); ?>" class="add full-width-mobile button green"><?php echo __('Export a Site'); ?></a>
+<?php endif; ?>
 
 <?php endif; ?>
 

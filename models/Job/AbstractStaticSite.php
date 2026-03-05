@@ -91,7 +91,7 @@ abstract class Job_AbstractStaticSite extends Omeka_Job_AbstractJob
         if (null === $this->_sitesDirectoryPath) {
             $sitesDirectoryPath = get_option('static_site_export_sites_directory_path');
             if (!StaticSiteExportPlugin::sitesDirectoryPathIsValid($sitesDirectoryPath)) {
-                throw new Exception\RuntimeException('Invalid directory path');
+                throw new Exception('StaticSiteExport: Invalid sites directory path');
             }
             $this->_sitesDirectoryPath = $sitesDirectoryPath;
         }
@@ -123,7 +123,7 @@ abstract class Job_AbstractStaticSite extends Omeka_Job_AbstractJob
         $output = shell_exec($command);
         if (false === $output) {
             // Stop the job.
-            throw new Exception(sprintf('Invalid command: %s', $command));
+            throw new Exception(sprintf('StaticSiteExport: Invalid command: %s', $command));
         }
     }
 

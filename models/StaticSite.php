@@ -27,7 +27,7 @@ class StaticSite extends Omeka_Record_AbstractRecord implements Zend_Acl_Resourc
             $this->setName(sprintf(
                 '%s-%s',
                 str_replace(' ', '-', strtolower(get_option('site_title'))),
-                $this->getId()
+                time()
             ));
             $this->save();
         }
