@@ -77,7 +77,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
             $this->setStatus(Process::STATUS_COMPLETED);
         } catch (Exception $e) {
             $this->setStatus(Process::STATUS_ERROR);
-            _log($e->getMessage(), Zend_Log::ERR);
+            _log(sprintf("%s\n%s", $e->getMessage(), $e->getTraceAsString()), Zend_Log::ERR);
         }
     }
 
@@ -218,7 +218,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
     /**
      * Create a file bundle.
      */
-    public function createFileBundle($file)
+    public function createFileBundle(Omeka_Record_AbstractRecord $file)
     {
         $item = $file->getItem();
 
@@ -316,7 +316,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
     /**
      * Create an item bundle.
      */
-    public function createItemBundle($item)
+    public function createItemBundle(Omeka_Record_AbstractRecord $item)
     {
         $this->makeDirectory(sprintf('content/items/%s', $item->id));
         $this->makeDirectory(sprintf('content/items/%s/blocks', $item->id));
@@ -418,7 +418,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
     /**
      * Create a collection bundle.
      */
-    public function createCollectionBundle($collection)
+    public function createCollectionBundle(Omeka_Record_AbstractRecord $collection)
     {
         $this->makeDirectory(sprintf('content/collections/%s', $collection->id));
         $this->makeDirectory(sprintf('content/collections/%s/blocks', $collection->id));
@@ -508,7 +508,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
      * @param Omeka_Record_AbstractRecord $record
      * @return array
      */
-    public function getAllElementTexts($record)
+    public function getAllElementTexts(Omeka_Record_AbstractRecord $record)
     {
         $allElementTexts = [];
         foreach (all_element_texts($record, ['return_type' => 'array']) as $elementSetName => $elements) {
@@ -539,7 +539,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
      * @param ArrayObject $frontMatterPage
      * @param ArrayObject $blocks
      */
-    public function addBlockFiles($item, $frontMatterPage, $blocks)
+    public function addBlockFiles(Omeka_Record_AbstractRecord $item, $frontMatterPage, $blocks)
     {
         if (!metadata($item, 'has files')) {
             return;
@@ -561,7 +561,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
      * @param ArrayObject $frontMatterPage
      * @param ArrayObject $blocks
      */
-    public function addBlockElementTexts($record, $frontMatterPage, $blocks)
+    public function addBlockElementTexts(Omeka_Record_AbstractRecord $record, $frontMatterPage, $blocks)
     {
         if ($record instanceof Item) {
             $section = 'items';
@@ -584,7 +584,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
      * @param ArrayObject $frontMatterPage
      * @param ArrayObject $blocks
      */
-    public function addBlockFilesGallery($item, $frontMatterPage, $blocks)
+    public function addBlockFilesGallery(Omeka_Record_AbstractRecord $item, $frontMatterPage, $blocks)
     {
         if (!metadata($item, 'has files')) {
             return;
@@ -612,7 +612,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
      * @param ArrayObject $frontMatterPage
      * @param ArrayObject $blocks
      */
-    public function addBlockTags($item, $frontMatterPage, $blocks)
+    public function addBlockTags(Omeka_Record_AbstractRecord $item, $frontMatterPage, $blocks)
     {
         if (!metadata($item, 'has tags')) {
             return;
@@ -645,7 +645,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
      * @param string $thumbnailType
      * @return array
      */
-    public function getThumbnailSpec($record, $thumbnailType)
+    public function getThumbnailSpec(Omeka_Record_AbstractRecord $record, $thumbnailType)
     {
         $thumbnailSpec = [
             'page' => null,
