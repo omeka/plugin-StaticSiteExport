@@ -76,11 +76,14 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
 
     public function hookConfig()
     {
-        if (!self::sitesDirectoryPathIsValid($_POST['sites_directory_path'])) {
+        // Enforce an absolute path to avoid potential relative path mismatches
+        // between admin and job contexts.
+        $path = realpath($_POST['sites_directory_path']);
+        if (!self::sitesDirectoryPathIsValid($path)) {
             throw new Omeka_Plugin_Installer_Exception('Invalid sites directory path');
         }
 
-        set_option('static_site_export_sites_directory_path', $_POST['sites_directory_path']);
+        set_option('static_site_export_sites_directory_path', $path);
     }
 
     public function filterAdminNavigationMain($nav)
