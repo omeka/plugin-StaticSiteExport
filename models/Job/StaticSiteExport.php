@@ -238,6 +238,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
             'params' => [
                 'fileID' => $file->id,
                 'thumbnailSpec' => $this->getThumbnailSpec($file, 'square_thumbnail'),
+                'alt' => $file->alt_text,
             ],
         ]);
         $blocks = new ArrayObject;
@@ -357,7 +358,6 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
                 $filesParam[] = [
                     'id' => $file->id,
                     'renderer' => $renderer,
-                    'alt' => $file->alt_text,
                 ];
             }
             $frontMatterPage['params']['files'] = $filesParam;
