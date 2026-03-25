@@ -14,6 +14,7 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
 
     protected $_filters = [
         'admin_navigation_main',
+        'static_site_export_shortcode_callbacks',
     ];
 
     public function hookInstall()
@@ -94,6 +95,15 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
             'resource' => 'StaticSiteExport_Index',
         ];
         return $nav;
+    }
+
+    public function filterStaticSiteExportShortcodeCallbacks($callbacks)
+    {
+        // @see Omeka_View_Helper_Shortcodes::shortcodeItems()
+        $callbacks['items'] = function ($args, $job) {
+            return '[items]';
+        };
+        return $callbacks;
     }
 
     public static function sitesDirectoryPathIsValid($sitesDirectoryPath)
