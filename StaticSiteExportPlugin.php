@@ -213,6 +213,21 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
             return $callbacks['collections']($args, $job);
         };
 
+        // @see Omeka_View_Helper_Shortcodes::shortcodeFile()
+        $callbacks['file'] = function ($args, $job) {
+            $file = get_record_by_id('File', $args['id']);
+            if (!$file) {
+                return;
+            }
+            $type = strstr($file->mime_type, '/', true);
+            return sprintf(
+                '{{< omeka-figure type="%s" filePage="files/%s" fileResource="file" imgPage="files/%s" imgResource="thumbnail">}}',
+                $type,
+                $file->id,
+                $file->id
+            );
+        };
+
         return $callbacks;
     }
 
