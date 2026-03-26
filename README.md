@@ -130,13 +130,34 @@ Plugins can add Hugo shortcodes by using the "static_site_export_shortcodes" fil
 function filterStaticSiteExportShortcodes($shortcodes, $args)
 {
     $shortcodes['shortcode-name'] = '/path/to/shortcode-name.html';
-    return $vendorPackages;
+    return $shortcodes;
 }
 ```
 
 Where "shortcode-name" is the name of the shortcode; and "/path/to/shortcode-name.html"
 is the absolute path of the shortcode file. These shortcodes will be copied to the
 newly created static site directory.
+
+### Adding Omeka shortcodes
+
+Omeka has [its own shortcodes](https://omeka.org/classic/docs/Content/Shortcodes/),
+for example `[items num=5]` and `[file id=123]`. Plugins can add Omeka shortcodes
+by using the "static_site_export_omeka_shortcode_callbacks" filter to register callbacks
+that return the corresponding Markdown:
+
+```php
+// Remember to register the "static_site_export_omeka_shortcode_callbacks" filter in your plugin code.
+function filterStaticSiteExportOmekaShortcodeCallbacks($shortcodes, $args)
+{
+    $shortcodes['shortcode-name'] = function ($args, $job) {
+        return ''; // Markdown content
+    };
+    return $shortcodes;
+}
+```
+
+Where "shortcode-name" is the name of the shortcode; and the callback function accepts
+the shortcode arguments array `$args` and the export job object `$job`.
 
 #### Using events to modify page (resource) bundles
 

@@ -683,36 +683,36 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
     }
 
     /**
-     * Get the markdown for text containing Omeka shortcodes.
+     * Get the markdown for text (usually HTML) containing Omeka shortcodes.
      *
-     * @param string $text Text (usually HTML) containing Omeka shortcodes
+     * @see Omeka_View_Helper_Shortcodes
+     * @param string $text Text containing Omeka shortcodes
      * @return string
      */
     public function getShortcodeMarkdown($text)
     {
         // Get available shortcode callbacks.
-        $shortcodeCallbacks = apply_filters('static_site_export_shortcode_callbacks', [], ['job' => $this]);
-
-        // Parse text into markdown.
-        $markdown = ["{}\n"];
+        $shortcodeCallbacks = apply_filters('static_site_export_omeka_shortcode_callbacks', [], ['job' => $this]);
 
         // Split the text into its component HTML and shortcodes by using the
         // shortcodes as captured delimiters.
         $shortcodePattern = '/(\[\w+\s*[^\]]*\])/';
         $textComponents = preg_split($shortcodePattern, $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
 
+        // Iterate the text components and build the markdown.
+        $markdown = [];
         foreach ($textComponents as $textComponent) {
             if (preg_match($shortcodePattern, $textComponent)) {
-                // Convert Omeka shortcodes into markdown.
+                // This is an Omeka shortcode. Convert it into markdown.
                 preg_match('/\[(\w+)\s*([^\]]*)\]/', $textComponent, $matches);
                 $shortcodeName = $matches[1];
                 $shortcodeArgs = (new Omeka_View_Helper_Shortcodes)->parseShortcodeAttributes($matches[2]);
-                // Get the shortcode markdown.
+                // Get the shortcode markdown via the callback, if any.
                 if (isset($shortcodeCallbacks[$shortcodeName]) && is_callable($shortcodeCallbacks[$shortcodeName])) {
                     $markdown[] = $shortcodeCallbacks[$shortcodeName]($shortcodeArgs, $this);
                 }
             } else {
-                // Wrap the HTML in the omeka-html shortcode.
+                // This is text. Wrap it in the omeka-html shortcode.
                 $markdown[] = sprintf('{{< omeka-html >}}%s{{< /omeka-html >}}', $textComponent);
             }
         }

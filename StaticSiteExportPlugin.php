@@ -14,7 +14,7 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
 
     protected $_filters = [
         'admin_navigation_main',
-        'static_site_export_shortcode_callbacks',
+        'static_site_export_omeka_shortcode_callbacks',
     ];
 
     public function hookInstall()
@@ -97,11 +97,49 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
         return $nav;
     }
 
-    public function filterStaticSiteExportShortcodeCallbacks($callbacks)
+    public function filterStaticSiteExportOmekaShortcodeCallbacks($callbacks)
     {
         // @see Omeka_View_Helper_Shortcodes::shortcodeItems()
         $callbacks['items'] = function ($args, $job) {
-            return '[items]';
+            $params = [];
+            if (isset($args['is_featured'])) {
+                $params['featured'] = $args['is_featured'];
+            }
+            if (isset($args['has_image'])) {
+                $params['hasImage'] = $args['has_image'];
+            }
+            if (isset($args['collection'])) {
+                $params['collection'] = $args['collection'];
+            }
+            if (isset($args['item_type'])) {
+                $params['item_type'] = $args['item_type'];
+            }
+            if (isset($args['tags'])) {
+                $params['tags'] = $args['tags'];
+            }
+            if (isset($args['user'])) {
+                $params['user'] = $args['user'];
+            }
+            if (isset($args['ids'])) {
+                $params['range'] = $args['ids'];
+            }
+            if (isset($args['sort'])) {
+                $params['sort_field'] = $args['sort'];
+            }
+            if (isset($args['order'])) {
+                $params['sort_dir'] = $args['order'];
+            }
+            if (isset($args['num'])) {
+                $limit = $args['num'];
+            } else {
+                $limit = 10;
+            }
+            $content = [];
+            $items = get_records('Item', $params, $limit);
+            foreach ($items as $item) {
+                $content[] = sprintf('{{< omeka-single-item itemPage="items/%s" >}}', $item->id);
+            }
+            return implode("\n", $content);
         };
         return $callbacks;
     }
