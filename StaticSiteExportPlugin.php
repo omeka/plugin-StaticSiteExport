@@ -165,6 +165,54 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
             return $callbacks['items']($args, $job);
         };
 
+        // @see Omeka_View_Helper_Shortcodes::shortcodeCollections()
+        $callbacks['collections'] = function ($args, $job) {
+            $params = [];
+            if (isset($args['ids'])) {
+                $params['range'] = $args['ids'];
+            }
+            if (isset($args['sort'])) {
+                $params['sort_field'] = $args['sort'];
+            }
+            if (isset($args['order'])) {
+                $params['sort_dir'] = $args['order'];
+            }
+            if (isset($args['is_featured'])) {
+                $params['featured'] = $args['is_featured'];
+            }
+            if (isset($args['num'])) {
+                $limit = $args['num'];
+            } else {
+                $limit = 10;
+            }
+            $content = [];
+            $collections = get_records('Collection', $params, $limit);
+            foreach ($collections as $collection) {
+                $content[] = sprintf('{{< omeka-single-collection collectionPage="collections/%s" >}}', $collection->id);
+            }
+            return implode("\n", $content);
+        };
+
+        // @see Omeka_View_Helper_Shortcodes::shortcodeRecentCollections()
+        $callbacks['recent_collections'] = function ($args, $job) use ($callbacks) {
+            if (!isset($args['num'])) {
+                $args['num'] = '5';
+            }
+            $args['sort'] = 'added';
+            $args['order'] = 'd';
+            return $callbacks['collections']($args, $job);
+        };
+
+        // @see Omeka_View_Helper_Shortcodes::shortcodeFeaturedCollections()
+        $callbacks['featured_collections'] = function ($args, $job) use ($callbacks) {
+            if (!isset($args['num'])) {
+                $args['num'] = '1';
+            }
+            $args['is_featured'] = '1';
+            $args['sort'] = 'random';
+            return $callbacks['collections']($args, $job);
+        };
+
         return $callbacks;
     }
 
