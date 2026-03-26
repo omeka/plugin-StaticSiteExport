@@ -141,6 +141,30 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
             }
             return implode("\n", $content);
         };
+
+        // @see Omeka_View_Helper_Shortcodes::shortcodeRecentItems()
+        $callbacks['recent_items'] = function ($args, $job) use ($callbacks) {
+            if (!isset($args['num'])) {
+                $args['num'] = '5';
+            }
+            $args['sort'] = 'added';
+            $args['order'] = 'd';
+            return $callbacks['items']($args, $job);
+        };
+
+        // @see Omeka_View_Helper_Shortcodes::shortcodeFeaturedItems()
+        $callbacks['featured_items'] = function ($args, $job) use ($callbacks) {
+            if (!isset($args['num'])) {
+                $args['num'] = '1';
+            }
+            if (!isset($args['has_image'])) {
+                $args['has_image'] = null;
+            }
+            $args['is_featured'] = 1;
+            $args['sort'] = 'random';
+            return $callbacks['items']($args, $job);
+        };
+
         return $callbacks;
     }
 
