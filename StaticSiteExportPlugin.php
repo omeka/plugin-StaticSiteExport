@@ -219,12 +219,24 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
             if (!$file) {
                 return;
             }
+            // Set the file type.
             $type = strstr($file->mime_type, '/', true);
+            // Set the image resource.
+            $imgResource = 'square_thumbnail';
+            if (isset($args['size']) && in_array($args['size'], ['thumbnail', 'square_thumbnail', 'fullsize'])) {
+                $imgResource = $args['size'];
+            }
+            // Set the width/height.
+            $width = $args['width'] ?? '';
+            $height = $args['height'] ?? '';
             return sprintf(
-                '{{< omeka-figure type="%s" filePage="files/%s" fileResource="file" imgPage="files/%s" imgResource="thumbnail">}}',
+                '{{< omeka-figure type="%s" filePage="files/%s" fileResource="file" imgPage="files/%s" imgResource="%s" width="%s" height="%s" >}}',
                 $type,
                 $file->id,
-                $file->id
+                $file->id,
+                $imgResource,
+                $width,
+                $height
             );
         };
 
