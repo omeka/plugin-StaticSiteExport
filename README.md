@@ -159,6 +159,14 @@ function filterStaticSiteExportOmekaShortcodeCallbacks($shortcodes, $args)
 Where "shortcode-name" is the name of the shortcode; and the callback function accepts
 the shortcode arguments array `$args` and the export job object `$job`.
 
+Plugins that need to parse text containing Omeka shortcodes should use `Job_StaticSiteExport::getShortcodeMarkdown()`:
+
+```php
+$markdown = $job->getShortcodeMarkdown($text);
+```
+
+### Events
+
 #### Using events to modify page (resource) bundles
 
 Plugins can modify page bundles via the following events:
