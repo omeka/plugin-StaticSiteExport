@@ -100,7 +100,7 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
     public function filterStaticSiteExportOmekaShortcodeCallbacks($callbacks)
     {
         // @see Omeka_View_Helper_Shortcodes::shortcodeItems()
-        $callbacks['items'] = function ($args, $job) {
+        $callbacks['items'] = function ($args, $frontMatter, $job) {
             $params = [];
             if (isset($args['is_featured'])) {
                 $params['featured'] = $args['is_featured'];
@@ -143,17 +143,17 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
         };
 
         // @see Omeka_View_Helper_Shortcodes::shortcodeRecentItems()
-        $callbacks['recent_items'] = function ($args, $job) use ($callbacks) {
+        $callbacks['recent_items'] = function ($args, $frontMatter, $job) use ($callbacks) {
             if (!isset($args['num'])) {
                 $args['num'] = '5';
             }
             $args['sort'] = 'added';
             $args['order'] = 'd';
-            return $callbacks['items']($args, $job);
+            return $callbacks['items']($args, $frontMatter, $job);
         };
 
         // @see Omeka_View_Helper_Shortcodes::shortcodeFeaturedItems()
-        $callbacks['featured_items'] = function ($args, $job) use ($callbacks) {
+        $callbacks['featured_items'] = function ($args, $frontMatter, $job) use ($callbacks) {
             if (!isset($args['num'])) {
                 $args['num'] = '1';
             }
@@ -162,11 +162,11 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
             }
             $args['is_featured'] = 1;
             $args['sort'] = 'random';
-            return $callbacks['items']($args, $job);
+            return $callbacks['items']($args, $frontMatter, $job);
         };
 
         // @see Omeka_View_Helper_Shortcodes::shortcodeCollections()
-        $callbacks['collections'] = function ($args, $job) {
+        $callbacks['collections'] = function ($args, $frontMatter, $job) {
             $params = [];
             if (isset($args['ids'])) {
                 $params['range'] = $args['ids'];
@@ -194,27 +194,27 @@ class StaticSiteExportPlugin extends Omeka_Plugin_AbstractPlugin
         };
 
         // @see Omeka_View_Helper_Shortcodes::shortcodeRecentCollections()
-        $callbacks['recent_collections'] = function ($args, $job) use ($callbacks) {
+        $callbacks['recent_collections'] = function ($args, $frontMatter, $job) use ($callbacks) {
             if (!isset($args['num'])) {
                 $args['num'] = '5';
             }
             $args['sort'] = 'added';
             $args['order'] = 'd';
-            return $callbacks['collections']($args, $job);
+            return $callbacks['collections']($args, $frontMatter, $job);
         };
 
         // @see Omeka_View_Helper_Shortcodes::shortcodeFeaturedCollections()
-        $callbacks['featured_collections'] = function ($args, $job) use ($callbacks) {
+        $callbacks['featured_collections'] = function ($args, $frontMatter, $job) use ($callbacks) {
             if (!isset($args['num'])) {
                 $args['num'] = '1';
             }
             $args['is_featured'] = '1';
             $args['sort'] = 'random';
-            return $callbacks['collections']($args, $job);
+            return $callbacks['collections']($args, $frontMatter, $job);
         };
 
         // @see Omeka_View_Helper_Shortcodes::shortcodeFile()
-        $callbacks['file'] = function ($args, $job) {
+        $callbacks['file'] = function ($args, $frontMatter, $job) {
             $file = get_record_by_id('File', $args['id']);
             if (!$file) {
                 return;

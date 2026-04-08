@@ -147,9 +147,11 @@ that return the corresponding Markdown:
 
 ```php
 // Remember to register the "static_site_export_omeka_shortcode_callbacks" filter in your plugin code.
-function filterStaticSiteExportOmekaShortcodeCallbacks($shortcodes, $args)
+function filterStaticSiteExportOmekaShortcodeCallbacks($shortcodes, $frontMatter, $args)
 {
-    $shortcodes['shortcode-name'] = function ($args, $job) {
+    $shortcodes['shortcode-name'] = function ($args, $frontMatter, $job) {
+        $frontMatter['css'][] = 'vendor/my-styles/styles.css';
+        $frontMatter['js'][] = 'vendor/my-scripts/scripts.js';
         return ''; // Markdown content
     };
     return $shortcodes;
@@ -162,7 +164,12 @@ the shortcode arguments array `$args` and the export job object `$job`.
 Plugins that need to parse text containing Omeka shortcodes should use `Job_StaticSiteExport::getShortcodeMarkdown()`:
 
 ```php
-$markdown = $job->getShortcodeMarkdown($text);
+$frontMatter = new ArrayObject;
+$markdown = $job->getShortcodeMarkdown($text, $frontMatter);
+$job->makeFile(
+    'content/my-page/index.md',
+    sprintf("%s\n%s", json_encode($frontMatter), $page->title, $markdown)
+);
 ```
 
 ### Events

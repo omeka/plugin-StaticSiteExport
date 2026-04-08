@@ -687,9 +687,10 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
      *
      * @see Omeka_View_Helper_Shortcodes
      * @param string $text Text containing Omeka shortcodes
+     * @param ArrayObject $frontMatter
      * @return string
      */
-    public function getShortcodeMarkdown($text)
+    public function getShortcodeMarkdown($text, ArrayObject $frontMatter)
     {
         // Get available shortcode callbacks.
         $shortcodeCallbacks = apply_filters('static_site_export_omeka_shortcode_callbacks', [], ['job' => $this]);
@@ -709,7 +710,7 @@ class Job_StaticSiteExport extends Job_AbstractStaticSite
                 $shortcodeArgs = (new Omeka_View_Helper_Shortcodes)->parseShortcodeAttributes($matches[2]);
                 // Get the shortcode markdown via the callback, if any.
                 if (isset($shortcodeCallbacks[$shortcodeName]) && is_callable($shortcodeCallbacks[$shortcodeName])) {
-                    $markdown[] = $shortcodeCallbacks[$shortcodeName]($shortcodeArgs, $this);
+                    $markdown[] = $shortcodeCallbacks[$shortcodeName]($shortcodeArgs, $frontMatter, $this);
                 }
             } else {
                 // This is text. Wrap it in the omeka-html shortcode.
