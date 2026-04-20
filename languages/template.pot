@@ -1,0 +1,110 @@
+# Translation for the Activity Log plugin for Omeka.
+# Copyright (C) 2026 Digital Scholar
+# This file is distributed under the same license as the Omeka package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: StaticSiteExport\n"
+"Report-Msgid-Bugs-To: http://github.com/omeka/plugin-ActivityLog/issues\n"
+"POT-Creation-Date: 2012-01-09 21:49-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: StaticSiteExportPlugin.php:93
+msgid "Static Site Export"
+msgstr ""
+
+#: controllers/IndexController.php:40
+#, php-format
+msgid "Exporting the static site \"%s\"."
+msgstr ""
+
+#: forms/StaticSite.php:8
+msgid "Base URL"
+msgstr ""
+
+#: forms/StaticSite.php:9
+msgid ""
+"The absolute URL of your published site including the protocol, host, path, "
+"and a trailing slash. This is optional and can be set after export, prior to "
+"build, in hugo.json under baseURL."
+msgstr ""
+
+#: forms/StaticSite.php:12
+msgid "Theme"
+msgstr ""
+
+#: forms/StaticSite.php:19
+msgid "Include private resources"
+msgstr ""
+
+#: forms/StaticSite.php:20
+msgid ""
+"Check to include private resources in the export. The default behavior is to "
+"exclude private resources. This must be set prior to export."
+msgstr ""
+
+#: models/Job/StaticSiteExport.php:172 models/Job/StaticSiteExport.php:292
+msgid "Browse items"
+msgstr ""
+
+#: models/Job/StaticSiteExport.php:177 models/Job/StaticSiteExport.php:395
+msgid "Browse collections"
+msgstr ""
+
+#: models/Job/StaticSiteExport.php:182
+msgid "Browse tags"
+msgstr ""
+
+#: models/Job/StaticSiteExport.php:201
+msgid "Browse files"
+msgstr ""
+
+#: views/admin/index/browse.php:3
+msgid "Browse Static Sites"
+msgstr ""
+
+#: views/admin/index/browse.php:13 views/admin/index/browse.php:57
+msgid "Export a Site"
+msgstr ""
+
+#: views/admin/index/browse.php:21
+msgid "Status"
+msgstr ""
+
+#: views/admin/index/browse.php:22
+msgid "Owner"
+msgstr ""
+
+#: views/admin/index/browse.php:53
+msgid "There are no static sites."
+msgstr ""
+
+#: views/admin/index/browse.php:56
+msgid "Get started by exporting your first static site."
+msgstr ""
+
+#: views/admin/index/export.php:3
+msgid "Export a Static Site"
+msgstr ""
+
+#: views/admin/index/export.php:17
+msgid "Export Static Site"
+msgstr ""
+
+#: views/admin/static-site-export-config-form.php:3
+msgid "Sites directory path"
+msgstr ""
+
+#: views/admin/static-site-export-config-form.php:6
+msgid ""
+"Enter the path to the directory where your static sites will be saved. The "
+"path must exist and be writable by the web server."
+msgstr ""
